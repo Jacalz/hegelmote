@@ -13,3 +13,7 @@ func (c *Control) SetSourceInput(amp device.Device, input string) error {
 	_, err := fmt.Fprintf(c.conn, commandFormat, "i", number)
 	return err
 }
+
+func (c *Control) GetSourceInput(amp device.Device) (string, error) {
+	return "", nil
+}
