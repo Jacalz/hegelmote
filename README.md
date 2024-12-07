@@ -9,7 +9,7 @@ While limited in functionality at the moment, the goal is to expand with better 
 
 ## Supported Amplifiers
 
-This software has only been tested on Hegel H95 but the list of supported models should be as follows:
+This software has only been tested on Hegel H95 but the list of supported models should be as follows according to the documentation:
 
 - Röst
 - H95
@@ -18,5 +18,10 @@ This software has only been tested on Hegel H95 but the list of supported models
 - H390
 - H590
 
+### Might work (untested)
+
+- H190v
+
 ## Sources
 - **IP control command and Input table:** https://support.hegel.com/component/jdownloads/send/3-files/102-h95-h120-h190-h390-h590-ip-control-codes
+- **Hegel Röst IP Control Codes:** https://support.hegel.com/component/jdownloads/send/3-files/16-roest-ip-control-codes
