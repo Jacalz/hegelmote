@@ -6,14 +6,15 @@ import "slices"
 type Device uint8
 
 const (
-	H95 Device = iota
+	Röst Device = iota
+	H95
 	H120
 	H190
 	H390
 	H590
 )
 
-var deviceInputs = [][]string{InputsH95, InputsH120, InputsH190, InputsH390, InputsH590}
+var deviceInputs = [][]string{InputsRöst, InputsH95, InputsH120, InputsH190, InputsH390, InputsH590}
 
 // InputNumber returns the corresponding input number for the input name.
 func InputNumber(device Device, input string) int {
