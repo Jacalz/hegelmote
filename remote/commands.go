@@ -3,6 +3,9 @@ package remote
 import (
 	"fmt"
 	"net"
+	"strconv"
+
+	"github.com/Jacalz/hegelmote/device"
 )
 
 const commandFormat = "-%s.%s\r"
@@ -32,8 +35,10 @@ func (c *Control) Disconnect() error {
 	return c.conn.Close()
 }
 
-func (c *Control) SourceInput(param string) error {
-	_, err := fmt.Fprintf(c.conn, commandFormat, "i", param)
+// SetSourceInput tells the amplifier to switch to the corresponding device input.
+func (c *Control) SetSourceInput(amp device.Device, input string) error {
+	number := strconv.Itoa(device.InputNumber(amp, input))
+	_, err := fmt.Fprintf(c.conn, commandFormat, "i", number)
 	return err
 }
 
