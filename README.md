@@ -1,6 +1,6 @@
 # Hegelmote
 
-This Go package and command utility allows remote control of Hegel amplifiers.
+This Go package allows remote IP control of Hegel amplifiers.
 It connects using tcp to the address and port of the amplifier and allows sending commands to control parameters like power, input and volume.
 
 The idea for this stems from wishing to create a free and open source alternative to [Hegel Remote](https://apps.apple.com/ca/app/hegel-remote/id1562489978). It also supports more devices than the official [Hegel Control app](https://support.hegel.com/product-articles/hegel-setup-app).
