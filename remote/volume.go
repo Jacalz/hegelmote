@@ -31,9 +31,9 @@ func (c *Control) VolumeDown() error {
 	return err
 }
 
-func (c *Control) GetVolume() error {
+func (c *Control) GetVolume() (uint, error) {
 	_, err := fmt.Fprintf(c.conn, commandFormat, "v", "?")
-	return err
+	return 0, err
 }
 
 // SetVolumeMute allows turning on or off mute.
@@ -47,7 +47,7 @@ func (c *Control) SetVolumeMute(mute bool) error {
 	return err
 }
 
-func (c *Control) GetVolumeMute() error {
+func (c *Control) GetVolumeMute() (bool, error) {
 	_, err := fmt.Fprintf(c.conn, commandFormat, "m", "?")
-	return err
+	return false, err
 }
