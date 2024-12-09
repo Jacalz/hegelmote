@@ -1,6 +1,7 @@
 package remote
 
 import (
+	"io"
 	"net"
 )
 
@@ -10,7 +11,7 @@ type Control struct {
 	Ip   string
 	Port string
 
-	conn net.Conn
+	conn io.ReadWriteCloser
 }
 
 func (c *Control) Connect(ip, port string) error {
