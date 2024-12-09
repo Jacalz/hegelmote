@@ -108,7 +108,7 @@ func handleVolumeCommand(subcommands []string, control *remote.Control) {
 			exitWithError(err)
 		}
 
-		fmt.Printf("Volume: %d%%", volume)
+		fmt.Printf("Volume: %d%%\n", volume)
 	case "muted":
 		muted, err := control.GetVolumeMute()
 		if err != nil {
