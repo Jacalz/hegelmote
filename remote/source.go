@@ -9,8 +9,12 @@ import (
 
 // SetSourceInput tells the amplifier to switch to the corresponding device input.
 func (c *Control) SetSourceInput(amp device.Device, input string) error {
-	number := strconv.Itoa(device.InputNumber(amp, input))
-	_, err := fmt.Fprintf(c.conn, commandFormat, "i", number)
+	number, err := device.NumberFromName(amp, input)
+	if err != nil {
+		return err
+	}
+	parameter := strconv.FormatUint(uint64(number), 10)
+	_, err = fmt.Fprintf(c.conn, commandFormat, "i", parameter)
 	return err
 }
 
@@ -28,7 +32,10 @@ func (c *Control) GetSourceInput(amp device.Device) (string, error) {
 	}
 
 	percentage := resp[3:n]
-	// TODO: Convert number to input string from device.
+	number, err := strconv.ParseUint(string(percentage), 10, 8)
+	if err != nil {
+		return "", err
+	}
 
-	return string(percentage), nil
+	return device.NameFromNumber(amp, uint(number))
 }
