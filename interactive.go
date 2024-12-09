@@ -53,7 +53,6 @@ func handlePowerCommand(subcommands []string, control *remote.Control) {
 	case "get":
 		control.GetPower()
 	}
-
 }
 
 func handleVolumeCommand(subcommands []string, control *remote.Control) {
