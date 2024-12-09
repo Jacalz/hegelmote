@@ -13,11 +13,18 @@ var (
 )
 
 type arguments struct {
-	ip   string
-	port string
+	ip          string
+	port        string
+	interactive bool
 }
 
 func parseArguments() (arguments, error) {
+	args := arguments{}
+
+	// Flags for starting in interactive mode.
+	flag.BoolVar(&args.interactive, "i", false, "starts an interactive command terminal")
+	flag.BoolVar(&args.interactive, "interactive", false, "starts an interactive command terminal")
+
 	flag.Parse()
 
 	if len(flag.Args()) == 0 {

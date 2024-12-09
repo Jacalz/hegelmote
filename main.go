@@ -25,5 +25,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	fmt.Println(command.SetPower(false))
+	if args.interactive {
+		runInteractiveMode(command)
+	}
 }
