@@ -22,6 +22,9 @@ func (c *Control) StopResetDelay() error {
 // Returns the delay or a bool indicating if it is stopped or not.
 func (c *Control) GetResetDelay() (uint8, bool, error) {
 	_, err := fmt.Fprintf(c.conn, commandFormat, "r", "?")
+	if err != nil {
+		return 0, false, err
+	}
 
 	resp := [6]byte{}
 	n, err := c.conn.Read(resp[:])
@@ -34,7 +37,7 @@ func (c *Control) GetResetDelay() (uint8, bool, error) {
 		return 0, true, nil
 	}
 
-	number := resp[3:n]
+	number := resp[3 : n-1]
 	delay, err := strconv.ParseUint(string(number), 10, 8)
 	return uint8(delay), false, err
 }
