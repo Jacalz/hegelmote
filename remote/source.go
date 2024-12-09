@@ -14,6 +14,21 @@ func (c *Control) SetSourceInput(amp device.Device, input string) error {
 	return err
 }
 
+// GetSourceInput returns the currently selected input source.
 func (c *Control) GetSourceInput(amp device.Device) (string, error) {
-	return "", nil
+	_, err := fmt.Fprintf(c.conn, commandFormat, "i", "?")
+	if err != nil {
+		return "", err
+	}
+
+	resp := [6]byte{}
+	n, err := c.conn.Read(resp[:])
+	if err != nil {
+		return "", err
+	}
+
+	percentage := resp[3:n]
+	// TODO: Convert number to input string from device.
+
+	return string(percentage), nil
 }
