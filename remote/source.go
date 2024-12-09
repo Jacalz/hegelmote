@@ -31,8 +31,8 @@ func (c *Control) GetSourceInput(amp device.Device) (string, error) {
 		return "", err
 	}
 
-	percentage := resp[3:n]
-	number, err := strconv.ParseUint(string(percentage), 10, 8)
+	input := resp[3 : n-1]
+	number, err := strconv.ParseUint(string(input), 10, 8)
 	if err != nil {
 		return "", err
 	}
