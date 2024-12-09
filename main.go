@@ -19,7 +19,7 @@ func main() {
 	command := &remote.Control{}
 	defer command.Disconnect()
 
-	err = command.Connect(args.ip, args.port)
+	err = command.Connect(args.ip + ":" + args.port)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)

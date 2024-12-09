@@ -7,15 +7,15 @@ import (
 
 const commandFormat = "-%s.%s\r"
 
+// Control implements remote IP control of supported Hegel amplifiers.
 type Control struct {
-	Ip   string
-	Port string
-
 	conn io.ReadWriteCloser
 }
 
-func (c *Control) Connect(ip, port string) error {
-	conn, err := net.Dial("tcp", ip+":"+port)
+// Connect connects to the supplied address.
+// The address should be on the format ip:port.
+func (c *Control) Connect(address string) error {
+	conn, err := net.Dial("tcp", address)
 	if err != nil {
 		return err
 	}
@@ -24,6 +24,7 @@ func (c *Control) Connect(ip, port string) error {
 	return nil
 }
 
+// Disconnect closes the remote connection.
 func (c *Control) Disconnect() error {
 	if c.conn == nil {
 		return nil
