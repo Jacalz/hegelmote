@@ -4,6 +4,7 @@ import "fmt"
 
 const powerCommand = "-p.%s\r"
 
+// SetPower sets the power to either on or off.
 func (c *Control) SetPower(on bool) error {
 	state := "0"
 	if on {
@@ -14,11 +15,13 @@ func (c *Control) SetPower(on bool) error {
 	return err
 }
 
+// TogglePower toggles the power on and off.
 func (c *Control) TogglePower() error {
 	_, err := fmt.Fprintf(c.conn, powerCommand, "t")
 	return err
 }
 
+// GetPower returns the current power status.
 func (c *Control) GetPower() (bool, error) {
 	_, err := fmt.Fprintf(c.conn, powerCommand, "?")
 	if err != nil {
