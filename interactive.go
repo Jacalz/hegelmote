@@ -92,8 +92,11 @@ func handleInputCommand(subcommands []string, control *remote.Control) {
 func handleResetCommand(subcommands []string, control *remote.Control) {
 	switch subcommands[0] {
 	case "stop":
+		control.StopResetDelay()
 	case "get":
+		control.GetResetDelay()
 	default:
-		control.ResetConnection(subcommands[0])
+		delay, _ := strconv.ParseUint(subcommands[0], 10, 8)
+		control.SetResetDelay(uint8(delay))
 	}
 }
