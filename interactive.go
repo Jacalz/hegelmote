@@ -65,7 +65,7 @@ func handleVolumeCommand(subcommands []string, control *remote.Control) {
 	case "set":
 		if len(subcommands) > 1 {
 			percentage, _ := strconv.ParseUint(subcommands[1], 10, 8)
-			control.SetVolume(uint(percentage))
+			control.SetVolume(uint8(percentage))
 		}
 	case "mute":
 		control.SetVolumeMute(true)

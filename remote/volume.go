@@ -9,7 +9,7 @@ import (
 var errInvalidPercentage = errors.New("invalid percentage value")
 
 // SetVolume sets the volume to a value between 0 and 100.
-func (c *Control) SetVolume(percentage uint) error {
+func (c *Control) SetVolume(percentage uint8) error {
 	if percentage > 100 {
 		return errInvalidPercentage
 	}
@@ -31,9 +31,22 @@ func (c *Control) VolumeDown() error {
 	return err
 }
 
+// GetVolume returns the currrently selected volume percentage.
 func (c *Control) GetVolume() (uint, error) {
 	_, err := fmt.Fprintf(c.conn, commandFormat, "v", "?")
-	return 0, err
+	if err != nil {
+		return 0, err
+	}
+
+	resp := [6]byte{}
+	n, err := c.conn.Read(resp[:])
+	if err != nil {
+		return 0, err
+	}
+
+	volume := resp[3:n]
+	percentage, err := strconv.ParseUint(string(volume), 10, 8)
+	return uint(percentage), err
 }
 
 // SetVolumeMute allows turning on or off mute.
@@ -47,7 +60,18 @@ func (c *Control) SetVolumeMute(mute bool) error {
 	return err
 }
 
+// GetVolumeMute returns true if the device is muted.
 func (c *Control) GetVolumeMute() (bool, error) {
 	_, err := fmt.Fprintf(c.conn, commandFormat, "m", "?")
-	return false, err
+	if err != nil {
+		return false, err
+	}
+
+	resp := [4]byte{}
+	_, err = c.conn.Read(resp[:])
+	if err != nil {
+		return false, err
+	}
+
+	return resp[3] == '1', err
 }
