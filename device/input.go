@@ -37,7 +37,7 @@ func NumberFromName(device Device, input string) (uint, error) {
 		return 0, errInvalidInput
 	}
 
-	return uint(number) + 1, nil
+	return uint(number) + 1, nil // #nosec: Known input!
 }
 
 // NameFromNumber returns the corresponding input name for the input number.
