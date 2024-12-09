@@ -18,6 +18,8 @@ func runInteractiveMode(control *remote.Control) {
 	input := bufio.NewScanner(os.Stdin)
 	input.Split(bufio.ScanLines)
 
+	fmt.Println("In interactive")
+
 	for input.Scan() {
 		line := input.Text()
 

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"flag"
+	"fmt"
 )
 
 var (
@@ -33,15 +34,16 @@ func parseArguments() (arguments, error) {
 		return arguments{}, errTooManyArgs
 	}
 
-	ip := flag.Arg(0)
-	if ip == "" {
+	args.ip = flag.Arg(0)
+	if args.ip == "" {
 		return arguments{}, errNoTargetIP
 	}
 
-	port := flag.Arg(1)
-	if port == "" {
-		port = "50001"
+	args.port = flag.Arg(1)
+	if args.port == "" {
+		args.port = "50001"
 	}
 
-	return arguments{ip: ip, port: port}, nil
+	fmt.Println(args)
+	return args, nil
 }
