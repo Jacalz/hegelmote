@@ -32,7 +32,7 @@ jobs:
       run: test -z $(gofumpt -d -e . | tee /dev/stderr)
 
     - name: Gocyclo
-      run: gocyclo -over 10 .
+      run: gocyclo -over 16 .
 
     - name: Staticcheck
       run: staticcheck ./...

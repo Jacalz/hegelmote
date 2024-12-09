@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -10,6 +11,8 @@ import (
 	"github.com/Jacalz/hegelmote/device"
 	"github.com/Jacalz/hegelmote/remote"
 )
+
+var errInvalidCommand = errors.New("invalid command format")
 
 func runInteractiveMode(control *remote.Control) {
 	input := bufio.NewScanner(os.Stdin)
@@ -20,8 +23,7 @@ func runInteractiveMode(control *remote.Control) {
 
 		commands := strings.Split(line, " ")
 		if len(commands) < 2 {
-			fmt.Fprintln(os.Stderr, "Invalid command. Exiting...")
-			os.Exit(2)
+			exitWithError(errInvalidCommand)
 		}
 
 		switch commands[0] {
@@ -36,8 +38,7 @@ func runInteractiveMode(control *remote.Control) {
 		case "exit", "quit":
 			return
 		default:
-			fmt.Fprintln(os.Stderr, "Invalid command. Exiting...")
-			os.Exit(2)
+			exitWithError(errInvalidCommand)
 		}
 	}
 }
@@ -45,57 +46,127 @@ func runInteractiveMode(control *remote.Control) {
 func handlePowerCommand(subcommands []string, control *remote.Control) {
 	switch subcommands[0] {
 	case "on":
-		control.SetPower(true)
+		err := control.SetPower(true)
+		if err != nil {
+			exitWithError(err)
+		}
 	case "off":
-		control.SetPower(false)
+		err := control.SetPower(false)
+		if err != nil {
+			exitWithError(err)
+		}
 	case "toggle":
-		control.TogglePower()
+		err := control.TogglePower()
+		if err != nil {
+			exitWithError(err)
+		}
 	case "get":
-		control.GetPower()
+		on, err := control.GetPower()
+		if err != nil {
+			exitWithError(err)
+		}
+
+		fmt.Println("Powered on:", on)
 	}
 }
 
 func handleVolumeCommand(subcommands []string, control *remote.Control) {
 	switch subcommands[0] {
 	case "up":
-		control.VolumeUp()
+		err := control.VolumeUp()
+		if err != nil {
+			exitWithError(err)
+		}
 	case "down":
-		control.VolumeDown()
+		err := control.VolumeDown()
+		if err != nil {
+			exitWithError(err)
+		}
 	case "set":
 		if len(subcommands) > 1 {
 			percentage, _ := strconv.ParseUint(subcommands[1], 10, 8)
-			control.SetVolume(uint8(percentage))
+			err := control.SetVolume(uint8(percentage))
+			if err != nil {
+				exitWithError(err)
+			}
 		}
 	case "mute":
-		control.SetVolumeMute(true)
+		err := control.SetVolumeMute(true)
+		if err != nil {
+			exitWithError(err)
+		}
 	case "unmute":
-		control.SetVolumeMute(false)
+		err := control.SetVolumeMute(false)
+		if err != nil {
+			exitWithError(err)
+		}
 	case "get":
-		control.GetVolume()
+		volume, err := control.GetVolume()
+		if err != nil {
+			exitWithError(err)
+		}
+
+		fmt.Println("Volume percentage:", volume)
 	case "muted":
-		control.GetVolumeMute()
+		muted, err := control.GetVolumeMute()
+		if err != nil {
+			exitWithError(err)
+		}
+
+		fmt.Println("Volume muted:", muted)
 	}
 }
 
 func handleInputCommand(subcommands []string, control *remote.Control) {
 	switch subcommands[0] {
 	case "set":
-		if len(subcommands) > 1 {
-			control.SetSourceInput(device.H95, subcommands[1])
+		if len(subcommands) != 2 {
+			exitWithError(errInvalidCommand)
+		}
+
+		err := control.SetSourceInput(device.H95, subcommands[1])
+		if err != nil {
+			exitWithError(err)
 		}
 	case "get":
-		control.GetSourceInput(device.H95)
+		input, err := control.GetSourceInput(device.H95)
+		if err != nil {
+			exitWithError(err)
+		}
+
+		fmt.Println("Selected input:", input)
 	}
 }
 
 func handleResetCommand(subcommands []string, control *remote.Control) {
 	switch subcommands[0] {
 	case "stop":
-		control.StopResetDelay()
+		err := control.StopResetDelay()
+		if err != nil {
+			exitWithError(err)
+		}
 	case "get":
-		control.GetResetDelay()
+		delay, stopped, err := control.GetResetDelay()
+		if err != nil {
+			exitWithError(err)
+		}
+
+		if stopped {
+			fmt.Println("Reset timeout: stopped")
+			return
+		}
+
+		fmt.Println("Time until reset:", delay)
 	default:
 		delay, _ := strconv.ParseUint(subcommands[0], 10, 8)
-		control.SetResetDelay(uint8(delay))
+		err := control.SetResetDelay(uint8(delay))
+		if err != nil {
+			exitWithError(err)
+		}
 	}
+}
+
+func exitWithError(err error) {
+	fmt.Fprintln(os.Stderr, err)
+	os.Exit(2)
 }
