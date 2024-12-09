@@ -24,10 +24,6 @@ func runInteractiveMode(control *remote.Control) {
 		line := input.Text()
 
 		commands := strings.Split(line, " ")
-		if len(commands) < 2 {
-			exitWithError(errInvalidCommand)
-		}
-
 		switch commands[0] {
 		case "power":
 			handlePowerCommand(commands[1:], control)
