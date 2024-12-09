@@ -44,7 +44,7 @@ func (c *Control) GetVolume() (uint, error) {
 		return 0, err
 	}
 
-	volume := resp[3:n]
+	volume := resp[3 : n-1]
 	percentage, err := strconv.ParseUint(string(volume), 10, 8)
 	return uint(percentage), err
 }
