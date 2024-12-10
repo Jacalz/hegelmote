@@ -23,6 +23,13 @@ func (c *Control) SetSourceName(amp device.Device, name string) error {
 func (c *Control) SetSourceNumber(number uint8) error {
 	parameter := strconv.FormatUint(uint64(number), 10)
 	_, err := fmt.Fprintf(c.conn, commandFormat, "i", parameter)
+	if err != nil {
+		return err
+	}
+
+	// Make sure to read out anything left in the buffer.
+	buf := [6]byte{}
+	_, err = c.conn.Read(buf[:])
 	return err
 }
 
