@@ -18,8 +18,6 @@ func runInteractiveMode(control *remote.Control) {
 	input := bufio.NewScanner(os.Stdin)
 	input.Split(bufio.ScanLines)
 
-	fmt.Println("In interactive")
-
 	for input.Scan() {
 		line := input.Text()
 
@@ -29,8 +27,8 @@ func runInteractiveMode(control *remote.Control) {
 			handlePowerCommand(commands[1:], control)
 		case "volume":
 			handleVolumeCommand(commands[1:], control)
-		case "input":
-			handleInputCommand(commands[1:], control)
+		case "input", "source":
+			handleSourceCommand(commands[1:], control)
 		case "reset":
 			handleResetCommand(commands[1:], control)
 		case "exit", "quit":
@@ -115,19 +113,25 @@ func handleVolumeCommand(subcommands []string, control *remote.Control) {
 	}
 }
 
-func handleInputCommand(subcommands []string, control *remote.Control) {
+func handleSourceCommand(subcommands []string, control *remote.Control) {
 	switch subcommands[0] {
 	case "set":
 		if len(subcommands) != 2 {
 			exitWithError(errInvalidCommand)
 		}
 
-		err := control.SetSourceName(device.H95, subcommands[1])
+		number, err := strconv.ParseUint(subcommands[1], 10, 8)
+		if err == nil {
+			err = control.SetSourceNumber(uint8(number))
+		} else {
+			err = control.SetSourceName(device.H95, subcommands[1])
+		}
+
 		if err != nil {
 			exitWithError(err)
 		}
 	case "get":
-		input, err := control.GetSourceName(device.H95)
+		input, err := control.GetSourceNumber()
 		if err != nil {
 			exitWithError(err)
 		}

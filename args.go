@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"flag"
-	"fmt"
 )
 
 var (
@@ -44,6 +43,5 @@ func parseArguments() (arguments, error) {
 		args.port = "50001"
 	}
 
-	fmt.Println(args)
 	return args, nil
 }
