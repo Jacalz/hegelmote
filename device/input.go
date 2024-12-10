@@ -26,7 +26,7 @@ var (
 
 // NumberFromName returns the corresponding input number for the input name.
 // NOTE: The output is indexed from 1.
-func NumberFromName(device Device, input string) (uint8, error) {
+func NumberFromName(device Device, input string) (uint, error) {
 	if device > H590 {
 		return 0, errInvalidDevice
 	}
@@ -37,18 +37,18 @@ func NumberFromName(device Device, input string) (uint8, error) {
 		return 0, errInvalidInput
 	}
 
-	return uint8(number) + 1, nil // #nosec: Known input!
+	return uint(number) + 1, nil // #nosec: Known input!
 }
 
 // NameFromNumber returns the corresponding input name for the input number.
 // NOTE: The input is indexed from 1.
-func NameFromNumber(device Device, number uint8) (string, error) {
+func NameFromNumber(device Device, number uint) (string, error) {
 	if device > H590 {
 		return "", errInvalidDevice
 	}
 
 	inputs := deviceInputs[device]
-	if number > uint8(len(inputs)) {
+	if number > uint(len(inputs)) {
 		return "", errInvalidInput
 	}
 

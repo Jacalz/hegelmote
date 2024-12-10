@@ -122,7 +122,7 @@ func handleSourceCommand(subcommands []string, control *remote.Control) {
 
 		number, err := strconv.ParseUint(subcommands[1], 10, 8)
 		if err == nil {
-			err = control.SetSourceNumber(uint8(number))
+			err = control.SetSourceNumber(uint(number))
 		} else {
 			err = control.SetSourceName(device.H95, subcommands[1])
 		}

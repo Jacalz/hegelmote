@@ -20,7 +20,7 @@ func (c *Control) SetSourceName(amp device.Device, name string) error {
 
 // SetSourceNumber sets the input source to the given number.
 // This will fail if the source number does not exist on the device.
-func (c *Control) SetSourceNumber(number uint8) error {
+func (c *Control) SetSourceNumber(number uint) error {
 	parameter := strconv.FormatUint(uint64(number), 10)
 	_, err := fmt.Fprintf(c.conn, commandFormat, "i", parameter)
 	if err != nil {
@@ -41,11 +41,11 @@ func (c *Control) GetSourceName(amp device.Device) (string, error) {
 		return "", err
 	}
 
-	return device.NameFromNumber(amp, uint8(number))
+	return device.NameFromNumber(amp, uint(number))
 }
 
 // GetSourceNumber returns the currently selected source number.
-func (c *Control) GetSourceNumber() (uint8, error) {
+func (c *Control) GetSourceNumber() (uint, error) {
 	_, err := fmt.Fprintf(c.conn, commandFormat, "i", "?")
 	if err != nil {
 		return 0, err
@@ -63,5 +63,5 @@ func (c *Control) GetSourceNumber() (uint8, error) {
 		return 0, err
 	}
 
-	return uint8(number), nil
+	return uint(number), nil
 }
