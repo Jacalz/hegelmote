@@ -17,7 +17,7 @@ const (
 	H590
 )
 
-var deviceInputs = [][]string{InputsRöst, InputsH95, InputsH120, InputsH190, InputsH390, InputsH590}
+var deviceInputs = [...][]string{InputsRöst, InputsH95, InputsH120, InputsH190, InputsH390, InputsH590}
 
 var (
 	errInvalidDevice = errors.New("invalid device type")
