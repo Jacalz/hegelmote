@@ -48,7 +48,7 @@ func NameFromNumber(device Device, number uint8) (string, error) {
 	}
 
 	inputs := deviceInputs[device]
-	if number > uint8(len(deviceInputs)) {
+	if number > uint8(len(inputs)) {
 		return "", errInvalidInput
 	}
 

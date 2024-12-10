@@ -131,12 +131,13 @@ func handleSourceCommand(subcommands []string, control *remote.Control) {
 			exitWithError(err)
 		}
 	case "get":
-		input, err := control.GetSourceNumber()
+		number, err := control.GetSourceNumber()
 		if err != nil {
 			exitWithError(err)
 		}
 
-		fmt.Println("Selected input:", input)
+		source, _ := device.NameFromNumber(device.H95, number)
+		fmt.Println("Selected input:", number, "-", source)
 	}
 }
 
