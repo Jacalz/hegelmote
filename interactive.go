@@ -122,12 +122,12 @@ func handleInputCommand(subcommands []string, control *remote.Control) {
 			exitWithError(errInvalidCommand)
 		}
 
-		err := control.SetSourceInput(device.H95, subcommands[1])
+		err := control.SetSourceName(device.H95, subcommands[1])
 		if err != nil {
 			exitWithError(err)
 		}
 	case "get":
-		input, err := control.GetSourceInput(device.H95)
+		input, err := control.GetSourceName(device.H95)
 		if err != nil {
 			exitWithError(err)
 		}
