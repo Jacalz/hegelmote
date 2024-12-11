@@ -38,7 +38,7 @@ func (c *Control) GetVolume() (uint, error) {
 		return 0, err
 	}
 
-	resp := [6]byte{}
+	resp := [7]byte{}
 	n, err := c.conn.Read(resp[:])
 	if err != nil {
 		return 0, err
