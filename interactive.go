@@ -116,7 +116,7 @@ func handleVolumeCommand(subcommands []string, control *remote.Control) {
 func handleSourceCommand(subcommands []string, control *remote.Control) {
 	switch subcommands[0] {
 	case "set":
-		if len(subcommands) != 2 {
+		if len(subcommands) == 1 {
 			exitWithError(errInvalidCommand)
 		}
 
@@ -124,7 +124,8 @@ func handleSourceCommand(subcommands []string, control *remote.Control) {
 		if err == nil {
 			err = control.SetSourceNumber(uint(number))
 		} else {
-			err = control.SetSourceName(device.H95, subcommands[1])
+			input := strings.Join(subcommands[1:], " ")
+			err = control.SetSourceName(device.H95, input)
 		}
 
 		if err != nil {
