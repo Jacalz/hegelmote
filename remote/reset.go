@@ -7,7 +7,7 @@ import (
 
 // SetResetDelay sets a timeout, in minutes, for when to reset.
 func (c *Control) SetResetDelay(delay uint8) error {
-	number := strconv.FormatInt(int64(delay), 10)
+	number := strconv.FormatUint(uint64(delay), 10)
 	_, err := fmt.Fprintf(c.conn, commandFormat, "r", number)
 	return err
 }
@@ -26,14 +26,14 @@ func (c *Control) GetResetDelay() (uint8, bool, error) {
 		return 0, false, err
 	}
 
-	resp := [6]byte{}
+	resp := [7]byte{}
 	n, err := c.conn.Read(resp[:])
 	if err != nil {
 		return 0, false, err
 	}
 
 	// Check if reset is stopped or not enabled.
-	if n == 4 && resp[3] == '~' {
+	if n >= 4 && resp[3] == '~' {
 		return 0, true, nil
 	}
 
