@@ -16,19 +16,31 @@ func (c *Control) SetVolume(percentage uint8) error {
 
 	value := strconv.FormatUint(uint64(percentage), 10)
 	_, err := fmt.Fprintf(c.conn, commandFormat, "v", value)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return c.parseErrorResponse()
 }
 
 // VolumeUp increases the volume one step.
 func (c *Control) VolumeUp() error {
 	_, err := fmt.Fprintf(c.conn, commandFormat, "v", "u")
-	return err
+	if err != nil {
+		return err
+	}
+
+	return c.parseErrorResponse()
 }
 
 // VolumeDown decreases the volume one step.
 func (c *Control) VolumeDown() error {
 	_, err := fmt.Fprintf(c.conn, commandFormat, "v", "d")
-	return err
+	if err != nil {
+		return err
+	}
+
+	return c.parseErrorResponse()
 }
 
 // GetVolume returns the currrently selected volume percentage.
@@ -57,7 +69,11 @@ func (c *Control) SetVolumeMute(mute bool) error {
 	}
 
 	_, err := fmt.Fprintf(c.conn, commandFormat, "m", state)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return c.parseErrorResponse()
 }
 
 // GetVolumeMute returns true if the device is muted.

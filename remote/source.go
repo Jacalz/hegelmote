@@ -35,10 +35,7 @@ func (c *Control) SetSourceNumber(number uint) error {
 		return err
 	}
 
-	// Make sure to read out anything left in the buffer.
-	buf := [6]byte{}
-	_, err = c.conn.Read(buf[:])
-	return err
+	return c.parseErrorResponse()
 }
 
 // GetSourceName returns the currently selected input source.

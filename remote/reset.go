@@ -9,13 +9,21 @@ import (
 func (c *Control) SetResetDelay(delay uint8) error {
 	number := strconv.FormatUint(uint64(delay), 10)
 	_, err := fmt.Fprintf(c.conn, commandFormat, "r", number)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return c.parseErrorResponse()
 }
 
 // StopResetDelay stops the delayed reset from happening.
 func (c *Control) StopResetDelay() error {
 	_, err := fmt.Fprintf(c.conn, commandFormat, "r", "~")
-	return err
+	if err != nil {
+		return err
+	}
+
+	return c.parseErrorResponse()
 }
 
 // GetResetDelay returns the current delay until reset.

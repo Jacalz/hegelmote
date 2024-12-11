@@ -1,31 +1,38 @@
 package remote
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestSetPower(t *testing.T) {
 	control, mock := newControlMock()
 
+	mock.Fill()
+
 	err := control.SetPower(true)
 	if err != nil || mock.writeBuf.String() != "-p.1\r" {
+		fmt.Println(err)
 		t.Fail()
 	}
-	mock.writeBuf.Reset()
+
+	mock.FlushToReader()
 
 	err = control.SetPower(false)
 	if err != nil || mock.writeBuf.String() != "-p.0\r" {
 		t.Fail()
 	}
-	mock.writeBuf.Reset()
 }
 
 func TestTogglePower(t *testing.T) {
 	control, mock := newControlMock()
 
+	mock.Fill()
+
 	err := control.TogglePower()
 	if err != nil || mock.writeBuf.String() != "-p.t\r" {
 		t.Fail()
 	}
-	mock.writeBuf.Reset()
 }
 
 func TestGetPower(t *testing.T) {

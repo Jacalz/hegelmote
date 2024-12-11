@@ -10,6 +10,8 @@ import (
 func TestSetSourceNumber(t *testing.T) {
 	control, mock := newControlMock()
 
+	mock.Fill()
+
 	err := control.SetSourceNumber(0)
 	if err == nil {
 		t.Fail()
@@ -36,7 +38,8 @@ func TestSetSourceNumber(t *testing.T) {
 func TestGetSourceNumber(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.readBuf.WriteString("-i.1\r")
+	mock.Fill()
+
 	control.SetSourceNumber(1)
 	mock.FlushToReader()
 
@@ -45,7 +48,7 @@ func TestGetSourceNumber(t *testing.T) {
 		t.Fail()
 	}
 
-	mock.Close()
+	mock.FlushToReader()
 	control.SetSourceNumber(8)
 	mock.FlushToReader()
 
@@ -58,7 +61,8 @@ func TestGetSourceNumber(t *testing.T) {
 func TestSetSouceName(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.readBuf.WriteString("-i.1\r")
+	mock.Fill()
+
 	err := control.SetSourceName(device.H95, "Analog 1")
 	if err != nil || mock.writeBuf.String() != "-i.1\r" {
 		t.Fail()

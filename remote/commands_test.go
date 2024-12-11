@@ -24,6 +24,11 @@ func (t *mockConnection) Close() error {
 	return nil
 }
 
+// Fill fills the read buffer to avoid EOF errors.
+func (t *mockConnection) Fill() {
+	t.readBuf.WriteString("1234567")
+}
+
 // FlashToReader flushes written data into the read buffer.
 func (t *mockConnection) FlushToReader() {
 	t.readBuf.Reset()

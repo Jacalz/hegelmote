@@ -12,13 +12,21 @@ func (c *Control) SetPower(on bool) error {
 	}
 
 	_, err := fmt.Fprintf(c.conn, powerCommand, state)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return c.parseErrorResponse()
 }
 
 // TogglePower toggles the power on and off.
 func (c *Control) TogglePower() error {
 	_, err := fmt.Fprintf(c.conn, powerCommand, "t")
-	return err
+	if err != nil {
+		return err
+	}
+
+	return c.parseErrorResponse()
 }
 
 // GetPower returns the current power status.
