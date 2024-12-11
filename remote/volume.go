@@ -25,7 +25,7 @@ func (c *Control) SetVolume(percentage uint8) error {
 
 // VolumeUp increases the volume one step.
 func (c *Control) VolumeUp() error {
-	_, err := fmt.Fprintf(c.conn, commandFormat, "v", "u")
+	_, err := c.conn.Write([]byte("-v.u\r"))
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (c *Control) VolumeUp() error {
 
 // VolumeDown decreases the volume one step.
 func (c *Control) VolumeDown() error {
-	_, err := fmt.Fprintf(c.conn, commandFormat, "v", "d")
+	_, err := c.conn.Write([]byte("-v.d\r"))
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (c *Control) VolumeDown() error {
 
 // GetVolume returns the currrently selected volume percentage.
 func (c *Control) GetVolume() (uint, error) {
-	_, err := fmt.Fprintf(c.conn, commandFormat, "v", "?")
+	_, err := c.conn.Write([]byte("-v.?\r"))
 	if err != nil {
 		return 0, err
 	}
@@ -68,12 +68,12 @@ func (c *Control) GetVolume() (uint, error) {
 
 // SetVolumeMute allows turning on or off mute.
 func (c *Control) SetVolumeMute(mute bool) error {
-	state := "0"
+	packet := []byte("-m.0\r")
 	if mute {
-		state = "1"
+		packet[3] = '1'
 	}
 
-	_, err := fmt.Fprintf(c.conn, commandFormat, "m", state)
+	_, err := c.conn.Write(packet)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (c *Control) SetVolumeMute(mute bool) error {
 
 // GetVolumeMute returns true if the device is muted.
 func (c *Control) GetVolumeMute() (bool, error) {
-	_, err := fmt.Fprintf(c.conn, commandFormat, "m", "?")
+	_, err := c.conn.Write([]byte("-m.?\r"))
 	if err != nil {
 		return false, err
 	}

@@ -51,7 +51,7 @@ func (c *Control) GetSourceName(amp device.Device) (string, error) {
 
 // GetSourceNumber returns the currently selected source number.
 func (c *Control) GetSourceNumber() (uint, error) {
-	_, err := fmt.Fprintf(c.conn, commandFormat, "i", "?")
+	_, err := c.conn.Write([]byte("-i.?\r"))
 	if err != nil {
 		return 0, err
 	}

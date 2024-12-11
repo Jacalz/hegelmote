@@ -1,17 +1,13 @@
 package remote
 
-import "fmt"
-
-const powerCommand = "-p.%s\r"
-
 // SetPower sets the power to either on or off.
 func (c *Control) SetPower(on bool) error {
-	state := "0"
+	packet := []byte("-p.0\r")
 	if on {
-		state = "1"
+		packet[3] = '1'
 	}
 
-	_, err := fmt.Fprintf(c.conn, powerCommand, state)
+	_, err := c.conn.Write(packet)
 	if err != nil {
 		return err
 	}
@@ -21,7 +17,7 @@ func (c *Control) SetPower(on bool) error {
 
 // TogglePower toggles the power on and off.
 func (c *Control) TogglePower() error {
-	_, err := fmt.Fprintf(c.conn, powerCommand, "t")
+	_, err := c.conn.Write([]byte("-p.t\r"))
 	if err != nil {
 		return err
 	}
@@ -31,7 +27,7 @@ func (c *Control) TogglePower() error {
 
 // GetPower returns the current power status.
 func (c *Control) GetPower() (bool, error) {
-	_, err := fmt.Fprintf(c.conn, powerCommand, "?")
+	_, err := c.conn.Write([]byte("-p.?\r"))
 	if err != nil {
 		return false, err
 	}
