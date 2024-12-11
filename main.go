@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -24,7 +25,9 @@ func main() {
 	}
 
 	if args.interactive {
-		runInteractiveMode(command)
+		runInteractiveMode(command, args.amplifier)
 		return
 	}
+
+	flag.PrintDefaults()
 }

@@ -14,7 +14,7 @@ import (
 
 var errInvalidCommand = errors.New("invalid command format")
 
-func runInteractiveMode(control *remote.Control) {
+func runInteractiveMode(control *remote.Control, amplifier device.Device) {
 	input := bufio.NewScanner(os.Stdin)
 	input.Split(bufio.ScanLines)
 
@@ -28,7 +28,7 @@ func runInteractiveMode(control *remote.Control) {
 		case "volume":
 			handleVolumeCommand(commands[1:], control)
 		case "input", "source":
-			handleSourceCommand(commands[1:], control)
+			handleSourceCommand(commands[1:], control, amplifier)
 		case "reset":
 			handleResetCommand(commands[1:], control)
 		case "exit", "quit":
@@ -118,7 +118,7 @@ func handleVolumeCommand(subcommands []string, control *remote.Control) {
 	}
 }
 
-func handleSourceCommand(subcommands []string, control *remote.Control) {
+func handleSourceCommand(subcommands []string, control *remote.Control, amplifier device.Device) {
 	switch subcommands[0] {
 	case "set":
 		if len(subcommands) == 1 {
@@ -130,7 +130,7 @@ func handleSourceCommand(subcommands []string, control *remote.Control) {
 			err = control.SetSourceNumber(uint(number))
 		} else {
 			input := strings.Join(subcommands[1:], " ")
-			err = control.SetSourceName(device.H95, input)
+			err = control.SetSourceName(amplifier, input)
 		}
 
 		if err != nil {
@@ -142,7 +142,7 @@ func handleSourceCommand(subcommands []string, control *remote.Control) {
 			exitWithError(err)
 		}
 
-		source, _ := device.NameFromNumber(device.H95, number)
+		source, _ := device.NameFromNumber(amplifier, number)
 		fmt.Println("Selected input:", number, "-", source)
 	}
 }

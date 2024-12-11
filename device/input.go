@@ -6,7 +6,7 @@ import (
 )
 
 // Device defines the Hegel amplifier to target.
-type Device uint8
+type Device = uint
 
 const (
 	Röst Device = iota

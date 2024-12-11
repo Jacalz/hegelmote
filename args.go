@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"flag"
+
+	"github.com/Jacalz/hegelmote/device"
 )
 
 var (
@@ -16,6 +18,7 @@ type arguments struct {
 	ip          string
 	port        string
 	interactive bool
+	amplifier   device.Device
 }
 
 func parseArguments() (arguments, error) {
@@ -24,12 +27,12 @@ func parseArguments() (arguments, error) {
 	// Flags for starting in interactive mode.
 	flag.BoolVar(&args.interactive, "i", false, "starts an interactive command terminal")
 	flag.BoolVar(&args.interactive, "interactive", false, "starts an interactive command terminal")
-
+	flag.UintVar(&args.amplifier, "device", 1, "sets the device to use for input mappings")
 	flag.Parse()
 
-	if len(flag.Args()) == 0 {
+	if flag.NArg() == 0 {
 		return arguments{}, errTooFewArgs
-	} else if len(flag.Args()) > 2 {
+	} else if flag.NArg() > 2 {
 		return arguments{}, errTooManyArgs
 	}
 
