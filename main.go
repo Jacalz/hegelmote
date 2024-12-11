@@ -12,6 +12,7 @@ func main() {
 	args, err := parseArguments()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		flag.PrintDefaults()
 		os.Exit(2)
 	}
 
