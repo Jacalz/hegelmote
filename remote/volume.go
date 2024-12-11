@@ -67,7 +67,7 @@ func (c *Control) GetVolumeMute() (bool, error) {
 		return false, err
 	}
 
-	resp := [4]byte{}
+	resp := [5]byte{}
 	_, err = c.conn.Read(resp[:])
 	if err != nil {
 		return false, err
