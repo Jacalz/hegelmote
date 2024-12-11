@@ -7,8 +7,6 @@ import (
 	"github.com/Jacalz/hegelmote/remote"
 )
 
-const CR = '\r'
-
 func main() {
 	args, err := parseArguments()
 	if err != nil {
@@ -27,5 +25,6 @@ func main() {
 
 	if args.interactive {
 		runInteractiveMode(command)
+		return
 	}
 }
