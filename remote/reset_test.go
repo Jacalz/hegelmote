@@ -35,8 +35,7 @@ func TestGetResetDelay(t *testing.T) {
 
 	// Set state to stopped.
 	control.StopResetDelay()
-	mock.readBuf.Write(mock.writeBuf.Bytes())
-	mock.writeBuf.Reset()
+	mock.FlushToReader()
 
 	delay, stopped, err := control.GetResetDelay()
 	if err != nil || delay != 0 || !stopped || mock.writeBuf.String() != "-r.?\r" {
@@ -46,8 +45,7 @@ func TestGetResetDelay(t *testing.T) {
 
 	// Set state delay to 255.
 	control.SetResetDelay(255)
-	mock.readBuf.Write(mock.writeBuf.Bytes())
-	mock.writeBuf.Reset()
+	mock.FlushToReader()
 
 	delay, stopped, err = control.GetResetDelay()
 	if err != nil || delay != 255 || stopped || mock.writeBuf.String() != "-r.?\r" {

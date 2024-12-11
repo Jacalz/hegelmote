@@ -31,14 +31,18 @@ func TestTogglePower(t *testing.T) {
 func TestGetPower(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.readBuf.WriteString("-p.0\r")
+	control.SetPower(false)
+	mock.FlushToReader()
+
 	on, err := control.GetPower()
 	if err != nil || on || mock.writeBuf.String() != "-p.?\r" {
 		t.Fail()
 	}
 	mock.Close()
 
-	mock.readBuf.WriteString("-p.1\r")
+	control.SetPower(true)
+	mock.FlushToReader()
+
 	on, err = control.GetPower()
 	if err != nil || !on || mock.writeBuf.String() != "-p.?\r" {
 		t.Fail()

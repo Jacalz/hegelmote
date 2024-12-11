@@ -24,6 +24,12 @@ func (t *mockConnection) Close() error {
 	return nil
 }
 
+// FlashToReader flushes written data into the read buffer.
+func (t *mockConnection) FlushToReader() {
+	t.readBuf.Write(t.writeBuf.Bytes())
+	t.writeBuf.Reset()
+}
+
 func newControlMock() (*Control, *mockConnection) {
 	control := &Control{}
 	adapter := &mockConnection{}
