@@ -1,11 +1,14 @@
 package remote
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/Jacalz/hegelmote/device"
 )
+
+var errSorceInputIsZero = errors.New("source indexing starts at 1")
 
 // SetSourceName tells the amplifier to switch to the corresponding source name.
 // The input name should match one for the given device type.
@@ -20,7 +23,12 @@ func (c *Control) SetSourceName(amp device.Device, name string) error {
 
 // SetSourceNumber sets the input source to the given number.
 // This will fail if the source number does not exist on the device.
+// NOTE: The input source is be indexed from 1.
 func (c *Control) SetSourceNumber(number uint) error {
+	if number == 0 {
+		return errSorceInputIsZero
+	}
+
 	parameter := strconv.FormatUint(uint64(number), 10)
 	_, err := fmt.Fprintf(c.conn, commandFormat, "i", parameter)
 	if err != nil {
