@@ -26,6 +26,7 @@ func (t *mockConnection) Close() error {
 
 // FlashToReader flushes written data into the read buffer.
 func (t *mockConnection) FlushToReader() {
+	t.readBuf.Reset()
 	t.readBuf.Write(t.writeBuf.Bytes())
 	t.writeBuf.Reset()
 }
