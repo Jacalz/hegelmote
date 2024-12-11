@@ -50,13 +50,18 @@ func (c *Control) GetVolume() (uint, error) {
 		return 0, err
 	}
 
-	resp := [7]byte{}
-	n, err := c.conn.Read(resp[:])
+	buf := [7]byte{}
+	n, err := c.conn.Read(buf[:])
 	if err != nil {
 		return 0, err
 	}
 
-	volume := resp[3 : n-1]
+	err = parseErrorFromBuffer(buf[:])
+	if err != nil {
+		return 0, err
+	}
+
+	volume := buf[3 : n-1]
 	percentage, err := strconv.ParseUint(string(volume), 10, 8)
 	return uint(percentage), err
 }
@@ -83,11 +88,16 @@ func (c *Control) GetVolumeMute() (bool, error) {
 		return false, err
 	}
 
-	resp := [5]byte{}
-	_, err = c.conn.Read(resp[:])
+	buf := [5]byte{}
+	_, err = c.conn.Read(buf[:])
 	if err != nil {
 		return false, err
 	}
 
-	return resp[3] == '1', err
+	err = parseErrorFromBuffer(buf[:])
+	if err != nil {
+		return false, err
+	}
+
+	return buf[3] == '1', err
 }

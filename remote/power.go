@@ -42,5 +42,10 @@ func (c *Control) GetPower() (bool, error) {
 		return false, err
 	}
 
+	err = parseErrorFromBuffer(buf[:])
+	if err != nil {
+		return false, err
+	}
+
 	return buf[3] == '1', nil
 }

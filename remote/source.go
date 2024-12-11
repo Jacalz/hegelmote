@@ -56,13 +56,18 @@ func (c *Control) GetSourceNumber() (uint, error) {
 		return 0, err
 	}
 
-	resp := [6]byte{}
-	n, err := c.conn.Read(resp[:])
+	buf := [6]byte{}
+	n, err := c.conn.Read(buf[:])
 	if err != nil {
 		return 0, err
 	}
 
-	input := resp[3 : n-1]
+	err = parseErrorFromBuffer(buf[:])
+	if err != nil {
+		return 0, err
+	}
+
+	input := buf[3 : n-1]
 	number, err := strconv.ParseUint(string(input), 10, 8)
 	if err != nil {
 		return 0, err

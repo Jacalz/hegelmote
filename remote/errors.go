@@ -20,6 +20,10 @@ func (c *Control) parseErrorResponse() error {
 		return err
 	}
 
+	return parseErrorFromBuffer(buf[:])
+}
+
+func parseErrorFromBuffer(buf []byte) error {
 	if buf[1] != 'e' {
 		return nil
 	}

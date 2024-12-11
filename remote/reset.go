@@ -34,18 +34,23 @@ func (c *Control) GetResetDelay() (uint8, bool, error) {
 		return 0, false, err
 	}
 
-	resp := [7]byte{}
-	n, err := c.conn.Read(resp[:])
+	buf := [7]byte{}
+	n, err := c.conn.Read(buf[:])
+	if err != nil {
+		return 0, false, err
+	}
+
+	err = parseErrorFromBuffer(buf[:])
 	if err != nil {
 		return 0, false, err
 	}
 
 	// Check if reset is stopped or not enabled.
-	if n >= 4 && resp[3] == '~' {
+	if n >= 4 && buf[3] == '~' {
 		return 0, true, nil
 	}
 
-	number := resp[3 : n-1]
+	number := buf[3 : n-1]
 	delay, err := strconv.ParseUint(string(number), 10, 8)
 	return uint8(delay), false, err
 }
