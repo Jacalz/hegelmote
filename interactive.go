@@ -37,6 +37,11 @@ func runInteractiveMode(control *remote.Control) {
 			exitWithError(errInvalidCommand)
 		}
 	}
+
+	err := input.Err()
+	if err != nil {
+		exitWithError(err)
+	}
 }
 
 func handlePowerCommand(subcommands []string, control *remote.Control) {
