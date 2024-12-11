@@ -5,8 +5,6 @@ import (
 	"net"
 )
 
-const commandFormat = "-%s.%s\r"
-
 // Control implements remote IP control of supported Hegel amplifiers.
 type Control struct {
 	conn io.ReadWriteCloser

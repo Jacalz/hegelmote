@@ -2,7 +2,6 @@ package remote
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 )
 
@@ -14,8 +13,12 @@ func (c *Control) SetVolume(percentage uint8) error {
 		return errInvalidPercentage
 	}
 
-	value := strconv.FormatUint(uint64(percentage), 10)
-	_, err := fmt.Fprintf(c.conn, commandFormat, "v", value)
+	packet := make([]byte, 0, 7)
+	packet = append(packet, "-v."...)
+	packet = strconv.AppendUint(packet, uint64(percentage), 10)
+	packet = append(packet, '\r')
+
+	_, err := c.conn.Write(packet)
 	if err != nil {
 		return err
 	}

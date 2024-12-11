@@ -1,14 +1,17 @@
 package remote
 
 import (
-	"fmt"
 	"strconv"
 )
 
 // SetResetDelay sets a timeout, in minutes, for when to reset.
 func (c *Control) SetResetDelay(delay uint8) error {
-	number := strconv.FormatUint(uint64(delay), 10)
-	_, err := fmt.Fprintf(c.conn, commandFormat, "r", number)
+	packet := make([]byte, 0, 7)
+	packet = append(packet, "-r."...)
+	packet = strconv.AppendUint(packet, uint64(delay), 10)
+	packet = append(packet, '\r')
+
+	_, err := c.conn.Write(packet)
 	if err != nil {
 		return err
 	}

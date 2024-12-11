@@ -2,7 +2,6 @@ package remote
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/Jacalz/hegelmote/device"
@@ -29,8 +28,12 @@ func (c *Control) SetSourceNumber(number uint) error {
 		return errSorceInputIsZero
 	}
 
-	parameter := strconv.FormatUint(uint64(number), 10)
-	_, err := fmt.Fprintf(c.conn, commandFormat, "i", parameter)
+	packet := make([]byte, 0, 7)
+	packet = append(packet, "-i."...)
+	packet = strconv.AppendUint(packet, uint64(number), 10)
+	packet = append(packet, '\r')
+
+	_, err := c.conn.Write(packet)
 	if err != nil {
 		return err
 	}
