@@ -24,7 +24,7 @@ func (c *Control) parseErrorResponse() error {
 }
 
 func parseErrorFromBuffer(buf []byte) error {
-	if buf[1] != 'e' {
+	if len(buf) < 4 || buf[1] != 'e' {
 		return nil
 	}
 
