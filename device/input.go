@@ -24,6 +24,15 @@ var (
 	errInvalidInput  = errors.New("input not on device")
 )
 
+// GetInputs returns the list of input names for the given device.
+func GetInputNames(device Device) ([]string, error) {
+	if device > H590 {
+		return nil, errInvalidDevice
+	}
+
+	return deviceInputs[device], nil
+}
+
 // NumberFromName returns the corresponding input number for the input name.
 // NOTE: The output is indexed from 1.
 func NumberFromName(device Device, input string) (uint, error) {
