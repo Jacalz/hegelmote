@@ -90,6 +90,17 @@ func TestSetVolumeMute(t *testing.T) {
 	}
 }
 
+func TestToggleVolumeMute(t *testing.T) {
+	control, mock := newControlMock()
+
+	mock.Fill()
+
+	err := control.ToggleVolumeMute()
+	if err != nil || mock.writeBuf.String() != "-m.t\r" {
+		t.Fail()
+	}
+}
+
 func TestGetVolumeMute(t *testing.T) {
 	control, mock := newControlMock()
 

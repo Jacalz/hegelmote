@@ -84,6 +84,16 @@ func (c *Control) SetVolumeMute(mute bool) error {
 	return c.parseErrorResponse()
 }
 
+// ToggleVolumeMute toggles the muting of volume.
+func (c *Control) ToggleVolumeMute() error {
+	_, err := c.conn.Write([]byte("-m.t\r"))
+	if err != nil {
+		return err
+	}
+
+	return c.parseErrorResponse()
+}
+
 // GetVolumeMute returns true if the device is muted.
 func (c *Control) GetVolumeMute() (bool, error) {
 	_, err := c.conn.Write([]byte("-m.?\r"))
