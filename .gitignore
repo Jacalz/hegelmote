@@ -8,6 +8,7 @@
 *.so
 *.dylib
 hegelmote
+cmd/hegelcli/hegelcli
 
 # Test binary, built with `go test -c`
 *.test
