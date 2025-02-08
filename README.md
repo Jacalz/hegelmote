@@ -7,6 +7,8 @@ The idea for this stems from wishing to create a free and open source alternativ
 
 While limited in functionality at the moment, the goal is to expand with better cli and gui offerings in the future.
 
+**NOTE**: We are not repsonsible for any damage to your equipment. This package is an unofficial app for controling the amplifiers and is in no way affiliated with the company [Hegel](https://www.hegel.com/en/).
+
 ## Supported Amplifiers
 
 This software has only been tested on Hegel H95 but the list of supported models should be as follows according to the documentation:
