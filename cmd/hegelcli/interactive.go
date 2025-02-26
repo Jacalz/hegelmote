@@ -130,7 +130,7 @@ func handleSourceCommand(subcommands []string, control *remote.Control, amplifie
 			err = control.SetSourceNumber(uint(number))
 		} else {
 			input := strings.Join(subcommands[1:], " ")
-			err = control.SetSourceName(amplifier, input)
+			err = control.SetSourceName(input)
 		}
 
 		if err != nil {

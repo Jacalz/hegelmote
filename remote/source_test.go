@@ -3,8 +3,6 @@ package remote
 import (
 	"fmt"
 	"testing"
-
-	"github.com/Jacalz/hegelmote/device"
 )
 
 func TestSetSourceNumber(t *testing.T) {
@@ -63,7 +61,7 @@ func TestSetSouceName(t *testing.T) {
 
 	mock.Fill()
 
-	err := control.SetSourceName(device.H95, "Analog 1")
+	err := control.SetSourceName("Analog 1")
 	if err != nil || mock.writeBuf.String() != "-i.1\r" {
 		t.Fail()
 	}
@@ -77,7 +75,7 @@ func TestSetSouceName(t *testing.T) {
 
 	mock.FlushToReader()
 
-	err = control.SetSourceName(device.H95, "Network")
+	err = control.SetSourceName("Network")
 	if err != nil || mock.writeBuf.String() != "-i.8\r" {
 		t.Fail()
 	}
@@ -89,7 +87,7 @@ func TestSetSouceName(t *testing.T) {
 		t.Fail()
 	}
 
-	err = control.SetSourceName(device.H590, "Bogus")
+	err = control.SetSourceName("Bogus")
 	if err == nil {
 		t.Fail()
 	}
@@ -102,7 +100,7 @@ func TestGetSourceName(t *testing.T) {
 	control.SetSourceNumber(1)
 	mock.FlushToReader()
 
-	name, err := control.GetSourceName(device.H95)
+	name, err := control.GetSourceName()
 	if err != nil || name != "Analog 1" {
 		t.Fail()
 	}
@@ -113,12 +111,12 @@ func TestGetSourceName(t *testing.T) {
 	control.SetSourceNumber(8)
 	mock.FlushToReader()
 
-	name, err = control.GetSourceName(device.H95)
+	name, err = control.GetSourceName()
 	if err != nil || name != "Network" {
 		t.Fail()
 	}
 
-	_, err = control.GetSourceName(15)
+	_, err = control.GetSourceName()
 	if err == nil {
 		t.Fail()
 	}

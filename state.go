@@ -36,13 +36,13 @@ func readState(control *remote.Control, model device.Device) *state {
 	}
 
 	// Input:
-	inputs, err := device.GetInputNames(model)
+	inputs, err := device.GetInputNames(model) // TODO: Move this to connection setup.
 	if err != nil {
 		fyne.LogError("Failed to get input names for device", err)
 		return nil
 	}
 
-	input, err := control.GetSourceName(model)
+	input, err := control.GetSourceName()
 	if err != nil {
 		fyne.LogError("Failed to get current input", err)
 		return nil

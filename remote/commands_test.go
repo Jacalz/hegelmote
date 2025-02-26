@@ -1,6 +1,10 @@
 package remote
 
-import "bytes"
+import (
+	"bytes"
+
+	"github.com/Jacalz/hegelmote/device"
+)
 
 type mockConnection struct {
 	readBuf  bytes.Buffer
@@ -37,7 +41,7 @@ func (t *mockConnection) FlushToReader() {
 }
 
 func newControlMock() (*Control, *mockConnection) {
-	control := &Control{}
+	control := &Control{model: device.H95}
 	adapter := &mockConnection{}
 	control.conn = adapter
 	return control, adapter

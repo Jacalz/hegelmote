@@ -119,7 +119,7 @@ func (r *remoteUI) onVolumeUp() {
 }
 
 func (r *remoteUI) onInputSelect(input string) {
-	err := r.control.SetSourceName(r.model, input)
+	err := r.control.SetSourceName(input)
 	if err != nil {
 		fyne.LogError("Failed to set input", err)
 	}
@@ -163,7 +163,7 @@ func main() {
 	command := &remote.Control{}
 	defer command.Disconnect()
 
-	err := command.Connect("192.168.1.251:50001")
+	err := command.Connect("192.168.1.251:50001", device.H95)
 	if err != nil {
 		panic(err)
 	}
