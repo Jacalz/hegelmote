@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="512"
+   height="512"
+   viewBox="0 0 512 512"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
+   sodipodi:docname="icon.svg"
+   inkscape:export-filename="icon.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="px"
+     inkscape:zoom="1.5440339"
+     inkscape:cx="227.65044"
+     inkscape:cy="230.56489"
+     inkscape:window-width="2560"
+     inkscape:window-height="1371"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#1d1d1d;stroke:#ffffff;stroke-width:9.80843;stroke-dasharray:none;fill-opacity:1"
+       id="rect1"
+       width="502.19156"
+       height="502.19156"
+       x="4.9042149"
+       y="4.9042149"
+       ry="105.451" />
+    <text
+       xml:space="preserve"
+       style="font-size:338.867px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#333333;stroke:#ffffff;stroke-width:56.6396;stroke-dasharray:none"
+       x="129.0076"
+       y="379.51767"
+       id="text1"><tspan
+         sodipodi:role="line"
+         id="tspan1"
+         x="129.0076"
+         y="379.51767"
+         style="font-style:normal;font-variant:normal;font-weight:200;font-stretch:normal;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans Ultra-Light';baseline-shift:baseline;stroke-width:56.6396;fill:#333333">H</tspan></text>
+  </g>
+</svg>
