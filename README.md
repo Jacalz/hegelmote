@@ -9,6 +9,10 @@ While limited in functionality at the moment, the goal is to expand with better 
 
 **NOTE**: We are not repsonsible for any damage to your equipment. This package is an unofficial app for controling the amplifiers and is in no way affiliated with the company [Hegel](https://www.hegel.com/en/).
 
+## Application
+
+There is currently a graphical interface in development as well. It is considered experimental for the moment. It is hardcoded to Hegel H95 at the default address and port.
+
 <p align="center">
   <img src="img/gui.png" />
 </p>
