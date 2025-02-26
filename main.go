@@ -20,6 +20,9 @@ func buildUI(command *remote.Control) fyne.CanvasObject {
 	inputs, _ := device.GetInputNames(deviceType)
 	inputSelector := &widget.Select{Options: inputs, PlaceHolder: "Select input to use", OnChanged: func(input string) { command.SetSourceName(deviceType, input) }}
 
+	source, _ := command.GetSourceName(device.H95)
+	inputSelector.Selected = source
+
 	return container.NewVBox(
 		power,
 		container.NewGridWithColumns(3, volumeMute, volumeDown, volumeUp),
