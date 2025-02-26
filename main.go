@@ -31,69 +31,52 @@ type remoteUI struct {
 }
 
 func (r *remoteUI) setupSync() {
-	r.syncState()
 	go r.runBackgroundSync()
 }
 
 func (r *remoteUI) runBackgroundSync() {
 	ticker := time.NewTicker(500 * time.Millisecond)
 
+	sync := func() {
+		current := readState(r.control, r.model)
+		if current == nil {
+			ticker.Stop()
+			return
+		}
+
+		fyne.Do(func() {
+			r.syncState(current)
+		})
+	}
+
+	sync()
+
 	for range ticker.C {
-		fyne.Do(r.syncState)
+		sync()
 	}
 }
 
-func (r *remoteUI) syncState() {
+func (r *remoteUI) syncState(current *state) {
 	// Power:
-	on, err := r.control.GetPower()
-	if err != nil {
-		fyne.LogError("Failed to read power status", err)
-		return
-	}
-
-	if on {
+	if current.poweredOn {
 		r.powerToggle.SetText("Power off")
 	} else {
 		r.powerToggle.SetText("Power on")
 	}
 
 	// Mute:
-	muted, err := r.control.GetVolumeMute()
-	if err != nil {
-		fyne.LogError("Failed to read mute status", err)
-		return
-	}
-
-	if muted {
+	if current.muted {
 		r.volumeSlider.Disable()
 	} else {
 		r.volumeSlider.Enable()
 	}
 
 	// Volume:
-	volume, err := r.control.GetVolume()
-	if err != nil {
-		fyne.LogError("Failed to read volume", err)
-		return
-	}
-
-	r.volumeSlider.SetValue(float64(volume))
+	r.volumeSlider.SetValue(float64(current.volume))
 
 	// Input:
-	inputs, err := device.GetInputNames(r.model)
-	if err != nil {
-		fyne.LogError("Failed to get input names for device", err)
-		return
-	}
-
-	input, err := r.control.GetSourceName(r.model)
-	if err != nil {
-		fyne.LogError("Failed to get current input", err)
-		return
-	}
-
-	r.inputSelector.Options = inputs
-	r.inputSelector.SetSelected(input)
+	r.inputSelector.Options = current.inputs
+	r.inputSelector.SetSelected(current.input)
 }
 
 func (r *remoteUI) onPowerToggle() {
