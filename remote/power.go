@@ -32,7 +32,7 @@ func (c *Control) GetPower() (bool, error) {
 		return false, err
 	}
 
-	buf := [4]byte{}
+	buf := [5]byte{}
 	_, err = c.conn.Read(buf[:])
 	if err != nil {
 		return false, err
