@@ -1,107 +1,175 @@
 package main
 
 import (
+	_ "embed"
 	"strconv"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/Jacalz/hegelmote/device"
 	"github.com/Jacalz/hegelmote/remote"
 )
 
-func showErrorOnFailure(err error, w fyne.Window) {
+type remoteUI struct {
+	// State:
+	control *remote.Control
+	model   device.Device
+	window  fyne.Window
+
+	// Widgets:
+	powerToggle *widget.Button
+
+	volumeDisplay                    *widget.Label
+	volumeSlider                     *widget.Slider
+	volumeMute, volumeDown, volumeUp *widget.Button
+
+	inputSelector *widget.Select
+}
+
+func (r *remoteUI) setupSync() {
+	r.syncState()
+	go r.runBackgroundSync()
+}
+
+func (r *remoteUI) runBackgroundSync() {
+	ticker := time.NewTicker(500 * time.Millisecond)
+
+	for range ticker.C {
+		fyne.Do(r.syncState)
+	}
+}
+
+func (r *remoteUI) syncState() {
+	// Power:
+	on, err := r.control.GetPower()
 	if err != nil {
-		dialog.ShowError(err, w)
+		fyne.LogError("Failed to read power status", err)
+		return
+	}
+
+	if on {
+		r.powerToggle.SetText("Power off")
+	} else {
+		r.powerToggle.SetText("Power on")
+	}
+
+	// Mute:
+	muted, err := r.control.GetVolumeMute()
+	if err != nil {
+		fyne.LogError("Failed to read mute status", err)
+		return
+	}
+
+	if muted {
+		r.volumeSlider.Disable()
+	} else {
+		r.volumeSlider.Enable()
+	}
+
+	// Volume:
+	volume, err := r.control.GetVolume()
+	if err != nil {
+		fyne.LogError("Failed to read volume", err)
+		return
+	}
+
+	r.volumeSlider.SetValue(float64(volume))
+
+	// Input:
+	inputs, err := device.GetInputNames(r.model)
+	if err != nil {
+		fyne.LogError("Failed to get input names for device", err)
+		return
+	}
+
+	input, err := r.control.GetSourceName(r.model)
+	if err != nil {
+		fyne.LogError("Failed to get current input", err)
+		return
+	}
+
+	r.inputSelector.Options = inputs
+	r.inputSelector.SetSelected(input)
+}
+
+func (r *remoteUI) onPowerToggle() {
+	err := r.control.TogglePower()
+	if err != nil {
+		fyne.LogError("Failed to toggle power", err)
+	}
+}
+
+func (r *remoteUI) onVolumeDrag(percentage float64) {
+	r.volumeDisplay.SetText(strconv.Itoa(int(percentage)) + "%")
+}
+
+func (r *remoteUI) onVolumeDragEnd(percentage float64) {
+	err := r.control.SetVolume(uint8(percentage))
+	if err != nil {
+		fyne.LogError("Failed to set volume", err)
+	}
+}
+
+func (r *remoteUI) onMute() {
+	err := r.control.ToggleVolumeMute()
+	if err != nil {
+		fyne.LogError("Failed to toggle mute", err)
+	}
+}
+
+func (r *remoteUI) onVolumeDown() {
+	err := r.control.VolumeDown()
+	if err != nil {
+		fyne.LogError("Failed to lower volume", err)
+	}
+}
+
+func (r *remoteUI) onVolumeUp() {
+	err := r.control.VolumeUp()
+	if err != nil {
+		fyne.LogError("Failed to increase volume", err)
+	}
+}
+
+func (r *remoteUI) onInputSelect(input string) {
+	err := r.control.SetSourceName(r.model, input)
+	if err != nil {
+		fyne.LogError("Failed to set input", err)
 	}
 }
 
 func buildRemoteUI(command *remote.Control, w fyne.Window) fyne.CanvasObject {
-	power := &widget.Button{}
-	power.OnTapped = func() {
-		showErrorOnFailure(command.TogglePower(), w)
+	ui := remoteUI{window: w, control: command, model: device.H95}
+	defer ui.setupSync()
 
-		on, err := command.GetPower()
-		showErrorOnFailure(err, w)
-		if on {
-			power.SetText("Power off")
-		} else {
-			power.SetText("Power on")
-		}
-	}
+	ui.powerToggle = &widget.Button{Text: "Toggle power", OnTapped: ui.onPowerToggle}
 
-	on, err := command.GetPower()
-	showErrorOnFailure(err, w)
-	if on {
-		power.Text = "Power off"
-	} else {
-		power.Text = "Power on"
-	}
+	ui.volumeDisplay = &widget.Label{Text: "0%"}
+	ui.volumeSlider = &widget.Slider{Min: 0, Max: 100, Step: 1, OnChanged: ui.onVolumeDrag, OnChangeEnded: ui.onVolumeDragEnd}
 
-	volume, err := command.GetVolume()
-	showErrorOnFailure(err, w)
-	volumeDisplay := &widget.Label{Text: strconv.FormatUint(uint64(volume), 10) + "%"}
-	volumeSlider := &widget.Slider{
-		Min: 0, Max: 100, Step: 1, Value: float64(volume), Orientation: widget.Horizontal,
-		OnChanged: func(f float64) {
-			volumeDisplay.SetText(strconv.Itoa(int(f)) + "%")
-		},
-		OnChangeEnded: func(f float64) {
-			showErrorOnFailure(command.SetVolume(uint8(f)), w)
-		},
-	}
+	ui.volumeMute = &widget.Button{Icon: theme.VolumeMuteIcon(), OnTapped: ui.onMute}
 
-	volumeMute := &widget.Button{Icon: theme.VolumeMuteIcon(), OnTapped: func() {
-		showErrorOnFailure(command.ToggleVolumeMute(), w)
-
-		muted, err := command.GetVolumeMute()
-		showErrorOnFailure(err, w)
-		if muted {
-			volumeSlider.SetValue(0)
-			return
-		}
-
-		volume, err := command.GetVolume()
-		showErrorOnFailure(err, w)
-		volumeSlider.SetValue(float64(volume))
-	}}
-	volumeUp := &widget.Button{Icon: theme.VolumeUpIcon(), OnTapped: func() {
-		showErrorOnFailure(command.VolumeUp(), w)
-
-		volume, err := command.GetVolume()
-		showErrorOnFailure(err, w)
-		volumeSlider.SetValue(float64(volume))
-	}}
-	volumeDown := &widget.Button{Icon: theme.VolumeDownIcon(), OnTapped: func() {
-		showErrorOnFailure(command.VolumeDown(), w)
-
-		volume, err := command.GetVolume()
-		showErrorOnFailure(err, w)
-		volumeSlider.SetValue(float64(volume))
-	}}
+	ui.volumeDown = &widget.Button{Icon: theme.VolumeDownIcon(), OnTapped: ui.onVolumeDown}
+	ui.volumeUp = &widget.Button{Icon: theme.VolumeUpIcon(), OnTapped: ui.onVolumeUp}
 
 	inputLabel := &widget.Label{Text: "Select input:", TextStyle: fyne.TextStyle{Bold: true}}
 
-	deviceType := device.H95
-	inputs, err := device.GetInputNames(deviceType)
-	showErrorOnFailure(err, w)
-	source, err := command.GetSourceName(deviceType)
-	showErrorOnFailure(err, w)
-	inputSelector := &widget.Select{Options: inputs, OnChanged: func(input string) { showErrorOnFailure(command.SetSourceName(deviceType, input), w) }, Selected: source}
+	ui.inputSelector = &widget.Select{PlaceHolder: "Select an input", OnChanged: ui.onInputSelect}
 
 	return container.NewVBox(
-		power,
+		ui.powerToggle,
 		widget.NewSeparator(),
 		container.NewVBox(
-			container.NewBorder(nil, nil, nil, volumeDisplay, volumeSlider),
-			container.NewGridWithColumns(3, volumeMute, volumeDown, volumeUp),
+			container.NewBorder(nil, nil, nil, ui.volumeDisplay, ui.volumeSlider),
+			container.NewGridWithColumns(3, ui.volumeMute, ui.volumeDown, ui.volumeUp),
 		),
 		widget.NewSeparator(),
 		inputLabel,
-		inputSelector,
+		ui.inputSelector,
 	)
 }
 
