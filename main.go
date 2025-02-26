@@ -43,7 +43,7 @@ func buildRemoteUI(command *remote.Control, w fyne.Window) fyne.CanvasObject {
 
 	volume, err := command.GetVolume()
 	showErrorOnFailure(err, w)
-	volumeDisplay := &widget.Label{Text: strconv.Itoa(int(volume)) + "%"}
+	volumeDisplay := &widget.Label{Text: strconv.FormatUint(uint64(volume), 10) + "%"}
 	volumeSlider := &widget.Slider{
 		Min: 0, Max: 100, Step: 1, Value: float64(volume), Orientation: widget.Horizontal,
 		OnChanged: func(f float64) {
