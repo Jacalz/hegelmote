@@ -28,11 +28,22 @@ type remoteUI struct {
 }
 
 func (r *remoteUI) syncState() {
+	r.volumeSlider.OnChangeEnded = nil
+	r.inputSelector.OnChanged = nil
+
 	// Power:
 	if r.amplifier.poweredOn {
 		r.powerToggle.SetText("Power off")
+		r.volumeMute.Enable()
+		r.volumeDown.Enable()
+		r.volumeUp.Enable()
+		r.inputSelector.Enable()
 	} else {
 		r.powerToggle.SetText("Power on")
+		r.volumeMute.Disable()
+		r.volumeDown.Disable()
+		r.volumeUp.Disable()
+		r.inputSelector.Disable()
 	}
 
 	// Volume:
@@ -40,18 +51,17 @@ func (r *remoteUI) syncState() {
 	r.volumeSlider.OnChanged(r.volumeSlider.Value)
 
 	// Mute:
-	r.volumeSlider.OnChangeEnded = nil
-	if r.amplifier.muted {
+	if r.amplifier.muted || !r.amplifier.poweredOn {
 		r.volumeSlider.Disable()
 	} else {
 		r.volumeSlider.Enable()
 	}
-	r.volumeSlider.OnChangeEnded = r.onVolumeDragEnd
 
 	// Input:
-	r.inputSelector.OnChanged = nil
 	r.inputSelector.SetSelected(r.amplifier.input)
+
 	r.inputSelector.OnChanged = r.onInputSelect
+	r.volumeSlider.OnChangeEnded = r.onVolumeDragEnd
 }
 
 func (r *remoteUI) onPowerToggle() {
