@@ -3,7 +3,6 @@ package main
 import (
 	_ "embed"
 	"strconv"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -16,74 +15,48 @@ import (
 
 type remoteUI struct {
 	// State:
-	control *remote.Control
-	model   device.Device
-	window  fyne.Window
+	amplifier state
+	model     device.Device
+	window    fyne.Window
 
 	// Widgets:
-	powerToggle *widget.Button
-
+	powerToggle                      *widget.Button
 	volumeDisplay                    *widget.Label
 	volumeSlider                     *widget.Slider
 	volumeMute, volumeDown, volumeUp *widget.Button
-
-	inputSelector *widget.Select
+	inputSelector                    *widget.Select
 }
 
-func (r *remoteUI) setupSync() {
-	go r.runBackgroundSync()
-}
-
-func (r *remoteUI) runBackgroundSync() {
-	ticker := time.NewTicker(500 * time.Millisecond)
-
-	sync := func() {
-		current := readState(r.control, r.model)
-		if current == nil {
-			ticker.Stop()
-			return
-		}
-
-		fyne.Do(func() {
-			r.syncState(current)
-		})
-	}
-
-	sync()
-
-	for range ticker.C {
-		sync()
-	}
-}
-
-func (r *remoteUI) syncState(current *state) {
+func (r *remoteUI) syncState() {
 	// Power:
-	if current.poweredOn {
+	if r.amplifier.poweredOn {
 		r.powerToggle.SetText("Power off")
 	} else {
 		r.powerToggle.SetText("Power on")
 	}
 
+	// Volume:
+	r.volumeSlider.Value = float64(r.amplifier.volume)
+	r.volumeSlider.OnChanged(r.volumeSlider.Value)
+
 	// Mute:
-	if current.muted {
+	r.volumeSlider.OnChangeEnded = nil
+	if r.amplifier.muted {
 		r.volumeSlider.Disable()
 	} else {
 		r.volumeSlider.Enable()
 	}
-
-	// Volume:
-	r.volumeSlider.SetValue(float64(current.volume))
+	r.volumeSlider.OnChangeEnded = r.onVolumeDragEnd
 
 	// Input:
-	r.inputSelector.Options = current.inputs
-	r.inputSelector.SetSelected(current.input)
+	r.inputSelector.OnChanged = nil
+	r.inputSelector.SetSelected(r.amplifier.input)
+	r.inputSelector.OnChanged = r.onInputSelect
 }
 
 func (r *remoteUI) onPowerToggle() {
-	err := r.control.TogglePower()
-	if err != nil {
-		fyne.LogError("Failed to toggle power", err)
-	}
+	r.amplifier.togglePower()
+	r.syncState()
 }
 
 func (r *remoteUI) onVolumeDrag(percentage float64) {
@@ -91,43 +64,33 @@ func (r *remoteUI) onVolumeDrag(percentage float64) {
 }
 
 func (r *remoteUI) onVolumeDragEnd(percentage float64) {
-	err := r.control.SetVolume(uint8(percentage))
-	if err != nil {
-		fyne.LogError("Failed to set volume", err)
-	}
+	r.amplifier.setVolume(uint8(percentage))
+	r.syncState()
 }
 
 func (r *remoteUI) onMute() {
-	err := r.control.ToggleVolumeMute()
-	if err != nil {
-		fyne.LogError("Failed to toggle mute", err)
-	}
+	r.amplifier.toggleMute()
+	r.syncState()
 }
 
 func (r *remoteUI) onVolumeDown() {
-	err := r.control.VolumeDown()
-	if err != nil {
-		fyne.LogError("Failed to lower volume", err)
-	}
+	r.amplifier.volumeDown()
+	r.syncState()
 }
 
 func (r *remoteUI) onVolumeUp() {
-	err := r.control.VolumeUp()
-	if err != nil {
-		fyne.LogError("Failed to increase volume", err)
-	}
+	r.amplifier.volumeUp()
+	r.syncState()
 }
 
 func (r *remoteUI) onInputSelect(input string) {
-	err := r.control.SetSourceName(input)
-	if err != nil {
-		fyne.LogError("Failed to set input", err)
-	}
+	r.amplifier.setInput(input)
+	r.syncState()
 }
 
 func buildRemoteUI(command *remote.Control, w fyne.Window) fyne.CanvasObject {
-	ui := remoteUI{window: w, control: command, model: device.H95}
-	defer ui.setupSync()
+	ui := remoteUI{window: w, amplifier: state{control: command}, model: device.H95}
+	ui.amplifier.load()
 
 	ui.powerToggle = &widget.Button{Text: "Toggle power", OnTapped: ui.onPowerToggle}
 
@@ -141,7 +104,13 @@ func buildRemoteUI(command *remote.Control, w fyne.Window) fyne.CanvasObject {
 
 	inputLabel := &widget.Label{Text: "Select input:", TextStyle: fyne.TextStyle{Bold: true}}
 
-	ui.inputSelector = &widget.Select{PlaceHolder: "Select an input", OnChanged: ui.onInputSelect}
+	inputs, _ := device.GetInputNames(ui.model) // TODO: Move this to a connection step.
+	ui.inputSelector = &widget.Select{Options: inputs, PlaceHolder: "Select an input", OnChanged: ui.onInputSelect}
+
+	ui.amplifier.load()
+	ui.syncState()
+
+	ui.amplifier.listenForChanges(func() { fyne.Do(ui.syncState) })
 
 	return container.NewVBox(
 		ui.powerToggle,

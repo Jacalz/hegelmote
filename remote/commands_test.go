@@ -2,11 +2,13 @@ package remote
 
 import (
 	"bytes"
+	"net"
 
 	"github.com/Jacalz/hegelmote/device"
 )
 
 type mockConnection struct {
+	net.Conn
 	readBuf  bytes.Buffer
 	writeBuf bytes.Buffer
 }
