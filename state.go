@@ -130,19 +130,20 @@ func (s *statefulController) setInput(input string) {
 	s.status.input = input
 }
 
-func (s *statefulController) trackState(callback func()) error {
+func (s *statefulController) trackState() (refresh bool, err error) {
 	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	resp, err := s.control.Read()
-	s.lock.Unlock()
 	if err != nil {
 		if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
-			return nil
+			return false, nil
 		}
 
 		if !s.closing {
 			fyne.LogError("Error when listening to changes", err)
 		}
-		return err
+		return false, err
 	}
 
 	switch resp[1] {
@@ -161,19 +162,22 @@ func (s *statefulController) trackState(callback func()) error {
 	default:
 		err := errors.New("unknown command")
 		fyne.LogError("Amplifier sent unknown command", err)
-		return err
+		return false, err
 	}
 
-	callback()
-	return nil
+	return true, nil
 }
 
 func (s *statefulController) trackChanges(callback func()) {
 	go func() {
 		for {
-			err := s.trackState(callback)
+			refresh, err := s.trackState()
 			if err != nil {
 				return
+			}
+
+			if refresh {
+				callback()
 			}
 		}
 	}()
