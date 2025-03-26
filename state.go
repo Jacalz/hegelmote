@@ -1,8 +1,8 @@
 package main
 
 import (
+	"net"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -113,7 +113,7 @@ func (s *state) listenForChanges(callback func()) {
 			resp, err := s.control.Read()
 			s.lock.Unlock()
 			if err != nil {
-				if strings.Contains(err.Error(), "i/o timeout") {
+				if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
 					continue
 				}
 
