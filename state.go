@@ -4,11 +4,14 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"github.com/Jacalz/hegelmote/device"
 	"github.com/Jacalz/hegelmote/remote"
 )
+
+const tempReadTimeout = time.Millisecond * 100
 
 type state struct {
 	poweredOn bool
@@ -20,8 +23,15 @@ type state struct {
 	lock    sync.Mutex
 }
 
-func (s *state) togglePower() {
+// sendLock unblocks the reading state tracker, locks and reverts back to blocking read.
+func (s *state) sendLock() {
+	s.control.Conn.SetReadDeadline(time.Now().Add(tempReadTimeout))
 	s.lock.Lock()
+	s.control.Conn.SetReadDeadline(time.Time{})
+}
+
+func (s *state) togglePower() {
+	s.sendLock()
 	defer s.lock.Unlock()
 
 	err := s.control.TogglePower()
@@ -34,7 +44,7 @@ func (s *state) togglePower() {
 }
 
 func (s *state) setVolume(percentage uint8) {
-	s.lock.Lock()
+	s.sendLock()
 	defer s.lock.Unlock()
 
 	err := s.control.SetVolume(percentage)
@@ -47,7 +57,7 @@ func (s *state) setVolume(percentage uint8) {
 }
 
 func (s *state) toggleMute() {
-	s.lock.Lock()
+	s.sendLock()
 	defer s.lock.Unlock()
 
 	err := s.control.ToggleVolumeMute()
@@ -60,7 +70,7 @@ func (s *state) toggleMute() {
 }
 
 func (s *state) volumeDown() {
-	s.lock.Lock()
+	s.sendLock()
 	defer s.lock.Unlock()
 
 	err := s.control.VolumeDown()
@@ -73,7 +83,7 @@ func (s *state) volumeDown() {
 }
 
 func (s *state) volumeUp() {
-	s.lock.Lock()
+	s.sendLock()
 	defer s.lock.Unlock()
 
 	err := s.control.VolumeUp()
@@ -86,7 +96,7 @@ func (s *state) volumeUp() {
 }
 
 func (s *state) setInput(input string) {
-	s.lock.Lock()
+	s.sendLock()
 	defer s.lock.Unlock()
 
 	err := s.control.SetSourceName(input)

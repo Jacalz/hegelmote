@@ -18,7 +18,7 @@ func (c *Control) SetVolume(percentage uint8) error {
 	packet = strconv.AppendUint(packet, uint64(percentage), 10)
 	packet = append(packet, '\r')
 
-	_, err := c.conn.Write(packet)
+	_, err := c.Conn.Write(packet)
 	if err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func (c *Control) SetVolume(percentage uint8) error {
 
 // VolumeUp increases the volume one step.
 func (c *Control) VolumeUp() error {
-	_, err := c.conn.Write([]byte("-v.u\r"))
+	_, err := c.Conn.Write([]byte("-v.u\r"))
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func (c *Control) VolumeUp() error {
 
 // VolumeDown decreases the volume one step.
 func (c *Control) VolumeDown() error {
-	_, err := c.conn.Write([]byte("-v.d\r"))
+	_, err := c.Conn.Write([]byte("-v.d\r"))
 	if err != nil {
 		return err
 	}
@@ -48,13 +48,13 @@ func (c *Control) VolumeDown() error {
 
 // GetVolume returns the currrently selected volume percentage.
 func (c *Control) GetVolume() (uint, error) {
-	_, err := c.conn.Write([]byte("-v.?\r"))
+	_, err := c.Conn.Write([]byte("-v.?\r"))
 	if err != nil {
 		return 0, err
 	}
 
 	buf := [7]byte{}
-	n, err := c.conn.Read(buf[:])
+	n, err := c.Conn.Read(buf[:])
 	if err != nil {
 		return 0, err
 	}
@@ -76,7 +76,7 @@ func (c *Control) SetVolumeMute(mute bool) error {
 		packet[3] = '1'
 	}
 
-	_, err := c.conn.Write(packet)
+	_, err := c.Conn.Write(packet)
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (c *Control) SetVolumeMute(mute bool) error {
 
 // ToggleVolumeMute toggles the muting of volume.
 func (c *Control) ToggleVolumeMute() error {
-	_, err := c.conn.Write([]byte("-m.t\r"))
+	_, err := c.Conn.Write([]byte("-m.t\r"))
 	if err != nil {
 		return err
 	}
@@ -96,13 +96,13 @@ func (c *Control) ToggleVolumeMute() error {
 
 // GetVolumeMute returns true if the device is muted.
 func (c *Control) GetVolumeMute() (bool, error) {
-	_, err := c.conn.Write([]byte("-m.?\r"))
+	_, err := c.Conn.Write([]byte("-m.?\r"))
 	if err != nil {
 		return false, err
 	}
 
 	buf := [5]byte{}
-	_, err = c.conn.Read(buf[:])
+	_, err = c.Conn.Read(buf[:])
 	if err != nil {
 		return false, err
 	}

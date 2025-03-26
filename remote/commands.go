@@ -2,7 +2,6 @@ package remote
 
 import (
 	"net"
-	"time"
 
 	"github.com/Jacalz/hegelmote/device"
 )
@@ -11,7 +10,7 @@ import (
 type Control struct {
 	model device.Device
 
-	conn net.Conn
+	Conn net.Conn
 }
 
 // Connect connects to the supplied address.
@@ -22,27 +21,24 @@ func (c *Control) Connect(address string, model device.Device) error {
 		return err
 	}
 
-	c.conn = conn
+	c.Conn = conn
 	c.model = model
 	return nil
 }
 
 // Disconnect closes the remote connection.
 func (c *Control) Disconnect() error {
-	if c.conn == nil {
+	if c.Conn == nil {
 		return nil
 	}
 
-	return c.conn.Close()
+	return c.Conn.Close()
 }
 
 func (c *Control) Read() ([]byte, error) {
 	buf := [len("-v.100\r")]byte{}
 
-	c.conn.SetReadDeadline(time.Now().Add(time.Millisecond * 100))
-	defer c.conn.SetReadDeadline(time.Time{})
-
-	n, err := c.conn.Read(buf[:])
+	n, err := c.Conn.Read(buf[:])
 	if err != nil {
 		return nil, err
 	}

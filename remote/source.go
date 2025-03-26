@@ -33,7 +33,7 @@ func (c *Control) SetSourceNumber(number uint) error {
 	packet = strconv.AppendUint(packet, uint64(number), 10)
 	packet = append(packet, '\r')
 
-	_, err := c.conn.Write(packet)
+	_, err := c.Conn.Write(packet)
 	if err != nil {
 		return err
 	}
@@ -54,13 +54,13 @@ func (c *Control) GetSourceName() (string, error) {
 
 // GetSourceNumber returns the currently selected source number.
 func (c *Control) GetSourceNumber() (uint, error) {
-	_, err := c.conn.Write([]byte("-i.?\r"))
+	_, err := c.Conn.Write([]byte("-i.?\r"))
 	if err != nil {
 		return 0, err
 	}
 
 	buf := [6]byte{}
-	n, err := c.conn.Read(buf[:])
+	n, err := c.Conn.Read(buf[:])
 	if err != nil {
 		return 0, err
 	}

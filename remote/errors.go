@@ -15,7 +15,7 @@ var errorCodes = [3]error{errMalformedCommand, errUnknownCommand, errInvalidPara
 
 func (c *Control) parseErrorResponse() error {
 	buf := [7]byte{}
-	_, err := c.conn.Read(buf[:])
+	_, err := c.Conn.Read(buf[:])
 	if err != nil {
 		return err
 	}
