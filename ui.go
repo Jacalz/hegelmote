@@ -11,25 +11,6 @@ import (
 	"github.com/Jacalz/hegelmote/remote"
 )
 
-type disableableWidget interface {
-	fyne.Widget
-	fyne.Disableable
-}
-
-func enableAndRefresh(wid disableableWidget) {
-	if !wid.Disabled() {
-		wid.Refresh()
-	}
-	wid.Enable()
-}
-
-func disableAndRefresh(wid disableableWidget) {
-	if wid.Disabled() {
-		wid.Refresh()
-	}
-	wid.Disable()
-}
-
 type remoteUI struct {
 	amplifier state
 	window    fyne.Window
@@ -42,46 +23,65 @@ type remoteUI struct {
 	inputSelector                    *widget.Select
 }
 
-func (r *remoteUI) syncState() {
-	r.volumeSlider.OnChangeEnded = nil
-	r.inputSelector.OnChanged = nil
-
-	// Input:
-	r.inputSelector.Selected = r.amplifier.input
-
-	// Power:
+func (r *remoteUI) refreshPower() {
 	if r.amplifier.poweredOn {
 		r.powerToggle.SetText("Power off")
-		r.volumeMute.Enable()
-		r.volumeDown.Enable()
-		r.volumeUp.Enable()
-		enableAndRefresh(r.inputSelector)
 	} else {
 		r.powerToggle.SetText("Power on")
-		r.volumeMute.Disable()
-		r.volumeDown.Disable()
-		r.volumeUp.Disable()
-		disableAndRefresh(r.inputSelector)
 	}
+}
 
-	// Volume:
+func (r *remoteUI) refreshVolumeSlider() {
+	r.volumeSlider.OnChangeEnded = nil
+
 	r.volumeSlider.Value = float64(r.amplifier.volume)
 	r.volumeSlider.OnChanged(r.volumeSlider.Value)
 
-	// Mute:
+	// Handle mute:
 	if r.amplifier.muted || !r.amplifier.poweredOn {
 		disableAndRefresh(r.volumeSlider)
 	} else {
 		enableAndRefresh(r.volumeSlider)
 	}
 
-	r.inputSelector.OnChanged = r.onInputSelect
 	r.volumeSlider.OnChangeEnded = r.onVolumeDragEnd
+}
+
+func (r *remoteUI) refreshVolumeButtons() {
+	if r.amplifier.poweredOn {
+		r.volumeMute.Enable()
+		r.volumeDown.Enable()
+		r.volumeUp.Enable()
+	} else {
+		r.volumeMute.Disable()
+		r.volumeDown.Disable()
+		r.volumeUp.Disable()
+	}
+}
+
+func (r *remoteUI) refreshInput() {
+	r.inputSelector.OnChanged = nil
+	r.inputSelector.Selected = r.amplifier.input
+
+	if r.amplifier.poweredOn {
+		enableAndRefresh(r.inputSelector)
+	} else {
+		disableAndRefresh(r.inputSelector)
+	}
+
+	r.inputSelector.OnChanged = r.onInputSelect
+}
+
+func (r *remoteUI) fullRefresh() {
+	r.refreshPower()
+	r.refreshVolumeSlider()
+	r.refreshVolumeButtons()
+	r.refreshInput()
 }
 
 func (r *remoteUI) onPowerToggle() {
 	r.amplifier.togglePower()
-	r.syncState()
+	r.fullRefresh()
 }
 
 func (r *remoteUI) onVolumeDrag(percentage float64) {
@@ -90,27 +90,27 @@ func (r *remoteUI) onVolumeDrag(percentage float64) {
 
 func (r *remoteUI) onVolumeDragEnd(percentage float64) {
 	r.amplifier.setVolume(uint8(percentage))
-	r.syncState()
+	r.refreshVolumeSlider()
 }
 
 func (r *remoteUI) onMute() {
 	r.amplifier.toggleMute()
-	r.syncState()
+	r.refreshVolumeSlider()
 }
 
 func (r *remoteUI) onVolumeDown() {
 	r.amplifier.volumeDown()
-	r.syncState()
+	r.refreshVolumeSlider()
 }
 
 func (r *remoteUI) onVolumeUp() {
 	r.amplifier.volumeUp()
-	r.syncState()
+	r.refreshVolumeSlider()
 }
 
 func (r *remoteUI) onInputSelect(input string) {
 	r.amplifier.setInput(input)
-	r.syncState()
+	r.refreshInput()
 }
 
 func buildRemoteUI(command *remote.Control, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
@@ -133,9 +133,9 @@ func buildRemoteUI(command *remote.Control, w fyne.Window) (*remoteUI, fyne.Canv
 	ui.inputSelector = &widget.Select{Options: inputs, PlaceHolder: "Select an input", OnChanged: ui.onInputSelect}
 
 	ui.amplifier.load()
-	ui.syncState()
+	ui.fullRefresh()
 
-	ui.amplifier.listenForChanges(func() { fyne.Do(ui.syncState) })
+	ui.amplifier.listenForChanges(func() { fyne.Do(ui.fullRefresh) })
 
 	return ui, container.NewVBox(
 		ui.powerToggle,
@@ -148,4 +148,23 @@ func buildRemoteUI(command *remote.Control, w fyne.Window) (*remoteUI, fyne.Canv
 		inputLabel,
 		ui.inputSelector,
 	)
+}
+
+type disableableWidget interface {
+	fyne.Widget
+	fyne.Disableable
+}
+
+func enableAndRefresh(wid disableableWidget) {
+	if !wid.Disabled() {
+		wid.Refresh()
+	}
+	wid.Enable()
+}
+
+func disableAndRefresh(wid disableableWidget) {
+	if wid.Disabled() {
+		wid.Refresh()
+	}
+	wid.Disable()
 }
