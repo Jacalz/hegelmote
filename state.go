@@ -24,14 +24,26 @@ type state struct {
 
 func (s *state) disconnect() {
 	s.closing = true
-	s.control.Disconnect()
+
+	err := s.control.Disconnect()
+	if err != nil {
+		fyne.LogError("Failure on disconnecting", err)
+	}
 }
 
 // sendLock unblocks the reading state tracker, locks and reverts back to blocking read.
 func (s *state) sendLock() {
-	s.control.Conn.SetReadDeadline(time.Now())
+	err := s.control.Conn.SetReadDeadline(time.Now())
+	if err != nil {
+		fyne.LogError("Failure when unblocking state tracker", err)
+	}
+
 	s.lock.Lock()
-	s.control.Conn.SetReadDeadline(time.Time{})
+
+	err = s.control.Conn.SetReadDeadline(time.Time{})
+	if err != nil {
+		fyne.LogError("Failure when restoring state tracker setup", err)
+	}
 }
 
 func (s *state) togglePower() {
