@@ -16,13 +16,17 @@ type state struct {
 	volume    uint
 	muted     bool
 	input     string
+}
+
+type statefulController struct {
+	status state
 
 	closing bool
 	control *remote.Control
 	lock    sync.Mutex
 }
 
-func (s *state) disconnect() {
+func (s *statefulController) disconnect() {
 	s.closing = true
 
 	err := s.control.Disconnect()
@@ -32,7 +36,7 @@ func (s *state) disconnect() {
 }
 
 // sendLock unblocks the reading state tracker, locks and reverts back to blocking read.
-func (s *state) sendLock() {
+func (s *statefulController) sendLock() {
 	err := s.control.Conn.SetReadDeadline(time.Now())
 	if err != nil {
 		fyne.LogError("Failure when unblocking state tracker", err)
@@ -46,7 +50,7 @@ func (s *state) sendLock() {
 	}
 }
 
-func (s *state) togglePower() {
+func (s *statefulController) togglePower() {
 	s.sendLock()
 	defer s.lock.Unlock()
 
@@ -56,10 +60,10 @@ func (s *state) togglePower() {
 		return
 	}
 
-	s.poweredOn = !s.poweredOn
+	s.status.poweredOn = !s.status.poweredOn
 }
 
-func (s *state) setVolume(percentage uint8) {
+func (s *statefulController) setVolume(percentage uint8) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
@@ -69,10 +73,10 @@ func (s *state) setVolume(percentage uint8) {
 		return
 	}
 
-	s.volume = uint(percentage)
+	s.status.volume = uint(percentage)
 }
 
-func (s *state) toggleMute() {
+func (s *statefulController) toggleMute() {
 	s.sendLock()
 	defer s.lock.Unlock()
 
@@ -82,10 +86,10 @@ func (s *state) toggleMute() {
 		return
 	}
 
-	s.muted = !s.muted
+	s.status.muted = !s.status.muted
 }
 
-func (s *state) volumeDown() {
+func (s *statefulController) volumeDown() {
 	s.sendLock()
 	defer s.lock.Unlock()
 
@@ -95,10 +99,10 @@ func (s *state) volumeDown() {
 		return
 	}
 
-	s.volume = max(0, s.volume-1)
+	s.status.volume = max(0, s.status.volume-1)
 }
 
-func (s *state) volumeUp() {
+func (s *statefulController) volumeUp() {
 	s.sendLock()
 	defer s.lock.Unlock()
 
@@ -108,10 +112,10 @@ func (s *state) volumeUp() {
 		return
 	}
 
-	s.volume = min(100, s.volume+1)
+	s.status.volume = min(100, s.status.volume+1)
 }
 
-func (s *state) setInput(input string) {
+func (s *statefulController) setInput(input string) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
@@ -121,10 +125,10 @@ func (s *state) setInput(input string) {
 		return
 	}
 
-	s.input = input
+	s.status.input = input
 }
 
-func (s *state) listenForChanges(callback func()) {
+func (s *statefulController) listenForChanges(callback func()) {
 	go func() {
 		for {
 			s.lock.Lock()
@@ -143,15 +147,15 @@ func (s *state) listenForChanges(callback func()) {
 
 			switch resp[1] {
 			case 'p':
-				s.poweredOn = resp[3] == '1'
+				s.status.poweredOn = resp[3] == '1'
 			case 'v':
 				volume, _ := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
-				s.volume = uint(volume)
+				s.status.volume = uint(volume)
 			case 'm':
-				s.muted = resp[3] == '1'
+				s.status.muted = resp[3] == '1'
 			case 'i':
 				input, _ := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
-				s.input, _ = device.NameFromNumber(device.H95, uint(input))
+				s.status.input, _ = device.NameFromNumber(device.H95, uint(input))
 			default:
 				continue
 			}
@@ -161,14 +165,14 @@ func (s *state) listenForChanges(callback func()) {
 	}()
 }
 
-func (s *state) load() {
+func (s *statefulController) load() {
 	on, err := s.control.GetPower()
 	if err != nil {
 		fyne.LogError("Failed to read power status", err)
 		return
 	}
 
-	s.poweredOn = on
+	s.status.poweredOn = on
 
 	volume, err := s.control.GetVolume()
 	if err != nil {
@@ -176,7 +180,7 @@ func (s *state) load() {
 		return
 	}
 
-	s.volume = volume
+	s.status.volume = volume
 
 	muted, err := s.control.GetVolumeMute()
 	if err != nil {
@@ -184,7 +188,7 @@ func (s *state) load() {
 		return
 	}
 
-	s.muted = muted
+	s.status.muted = muted
 
 	input, err := s.control.GetSourceName()
 	if err != nil {
@@ -192,5 +196,5 @@ func (s *state) load() {
 		return
 	}
 
-	s.input = input
+	s.status.input = input
 }
