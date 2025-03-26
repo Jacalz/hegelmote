@@ -49,12 +49,17 @@ func (r *remoteUI) syncState() {
 	// Volume:
 	r.volumeSlider.Value = float64(r.amplifier.volume)
 	r.volumeSlider.OnChanged(r.volumeSlider.Value)
-	r.volumeSlider.Refresh()
 
 	// Mute:
 	if r.amplifier.muted || !r.amplifier.poweredOn {
+		if r.volumeSlider.Disabled() {
+			r.volumeSlider.Refresh()
+		}
 		r.volumeSlider.Disable()
 	} else {
+		if !r.volumeSlider.Disabled() {
+			r.volumeSlider.Refresh()
+		}
 		r.volumeSlider.Enable()
 	}
 
