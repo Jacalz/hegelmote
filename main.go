@@ -13,6 +13,25 @@ import (
 	"github.com/Jacalz/hegelmote/remote"
 )
 
+type disableableWidget interface {
+	fyne.Widget
+	fyne.Disableable
+}
+
+func enableAndRefresh(wid disableableWidget) {
+	if !wid.Disabled() {
+		wid.Refresh()
+	}
+	wid.Enable()
+}
+
+func disableAndRefresh(wid disableableWidget) {
+	if wid.Disabled() {
+		wid.Refresh()
+	}
+	wid.Disable()
+}
+
 type remoteUI struct {
 	amplifier state
 	window    fyne.Window
@@ -29,19 +48,22 @@ func (r *remoteUI) syncState() {
 	r.volumeSlider.OnChangeEnded = nil
 	r.inputSelector.OnChanged = nil
 
+	// Input:
+	r.inputSelector.Selected = r.amplifier.input
+
 	// Power:
 	if r.amplifier.poweredOn {
 		r.powerToggle.SetText("Power off")
 		r.volumeMute.Enable()
 		r.volumeDown.Enable()
 		r.volumeUp.Enable()
-		r.inputSelector.Enable()
+		enableAndRefresh(r.inputSelector)
 	} else {
 		r.powerToggle.SetText("Power on")
 		r.volumeMute.Disable()
 		r.volumeDown.Disable()
 		r.volumeUp.Disable()
-		r.inputSelector.Disable()
+		disableAndRefresh(r.inputSelector)
 	}
 
 	// Volume:
@@ -50,19 +72,10 @@ func (r *remoteUI) syncState() {
 
 	// Mute:
 	if r.amplifier.muted || !r.amplifier.poweredOn {
-		if r.volumeSlider.Disabled() {
-			r.volumeSlider.Refresh()
-		}
-		r.volumeSlider.Disable()
+		disableAndRefresh(r.volumeSlider)
 	} else {
-		if !r.volumeSlider.Disabled() {
-			r.volumeSlider.Refresh()
-		}
-		r.volumeSlider.Enable()
+		enableAndRefresh(r.volumeSlider)
 	}
-
-	// Input:
-	r.inputSelector.SetSelected(r.amplifier.input)
 
 	r.inputSelector.OnChanged = r.onInputSelect
 	r.volumeSlider.OnChangeEnded = r.onVolumeDragEnd
