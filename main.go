@@ -14,9 +14,7 @@ import (
 )
 
 type remoteUI struct {
-	// State:
 	amplifier state
-	model     device.Device
 	window    fyne.Window
 
 	// Widgets:
@@ -105,7 +103,7 @@ func (r *remoteUI) onInputSelect(input string) {
 }
 
 func buildRemoteUI(command *remote.Control, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
-	ui := &remoteUI{window: w, amplifier: state{control: command}, model: device.H95}
+	ui := &remoteUI{window: w, amplifier: state{control: command}}
 	ui.amplifier.load()
 
 	ui.powerToggle = &widget.Button{Text: "Toggle power", OnTapped: ui.onPowerToggle}
@@ -120,7 +118,7 @@ func buildRemoteUI(command *remote.Control, w fyne.Window) (*remoteUI, fyne.Canv
 
 	inputLabel := &widget.Label{Text: "Select input:", TextStyle: fyne.TextStyle{Bold: true}}
 
-	inputs, _ := device.GetInputNames(ui.model) // TODO: Move this to a connection step.
+	inputs, _ := device.GetInputNames(ui.amplifier.control.Model) // TODO: Move this to a connection step.
 	ui.inputSelector = &widget.Select{Options: inputs, PlaceHolder: "Select an input", OnChanged: ui.onInputSelect}
 
 	ui.amplifier.load()

@@ -12,7 +12,7 @@ var errSorceInputIsZero = errors.New("source indexing starts at 1")
 // SetSourceName tells the amplifier to switch to the corresponding source name.
 // The input name should match one for the given device type.
 func (c *Control) SetSourceName(name string) error {
-	number, err := device.NumberFromName(c.model, name)
+	number, err := device.NumberFromName(c.Model, name)
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func (c *Control) GetSourceName() (string, error) {
 		return "", err
 	}
 
-	return device.NameFromNumber(c.model, uint(number))
+	return device.NameFromNumber(c.Model, uint(number))
 }
 
 // GetSourceNumber returns the currently selected source number.

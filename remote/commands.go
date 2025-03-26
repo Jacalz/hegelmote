@@ -8,7 +8,7 @@ import (
 
 // Control implements remote IP control of supported Hegel amplifiers.
 type Control struct {
-	model device.Device
+	Model device.Device
 
 	Conn net.Conn
 }
@@ -22,7 +22,7 @@ func (c *Control) Connect(address string, model device.Device) error {
 	}
 
 	c.Conn = conn
-	c.model = model
+	c.Model = model
 	return nil
 }
 
