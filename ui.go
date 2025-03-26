@@ -134,7 +134,7 @@ func buildRemoteUI(command *remote.Control, w fyne.Window) (*remoteUI, fyne.Canv
 	ui.amplifier.load()
 	ui.fullRefresh()
 
-	ui.amplifier.listenForChanges(func() { fyne.Do(ui.fullRefresh) })
+	ui.amplifier.trackChanges(func() { fyne.Do(ui.fullRefresh) })
 
 	return ui, container.NewVBox(
 		ui.powerToggle,

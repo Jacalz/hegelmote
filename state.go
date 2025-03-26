@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"net"
 	"strconv"
 	"sync"
@@ -128,39 +130,51 @@ func (s *statefulController) setInput(input string) {
 	s.status.input = input
 }
 
-func (s *statefulController) listenForChanges(callback func()) {
+func (s *statefulController) trackState(callback func()) error {
+	s.lock.Lock()
+	resp, err := s.control.Read()
+	s.lock.Unlock()
+	if err != nil {
+		if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
+			return nil
+		}
+
+		if !s.closing {
+			fyne.LogError("Error when listening to changes", err)
+		}
+		return err
+	}
+
+	switch resp[1] {
+	case 'p':
+		s.status.poweredOn = resp[3] == '1'
+	case 'v':
+		volume, _ := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
+		s.status.volume = uint(volume)
+	case 'm':
+		s.status.muted = resp[3] == '1'
+	case 'i':
+		input, _ := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
+		s.status.input, _ = device.NameFromNumber(device.H95, uint(input))
+	case 'e':
+		fyne.LogError("Amplifier sent error", fmt.Errorf("error code %d", resp[3]))
+	default:
+		err := errors.New("unknown command")
+		fyne.LogError("Amplifier sent unknown command", err)
+		return err
+	}
+
+	callback()
+	return nil
+}
+
+func (s *statefulController) trackChanges(callback func()) {
 	go func() {
 		for {
-			s.lock.Lock()
-			resp, err := s.control.Read()
-			s.lock.Unlock()
+			err := s.trackState(callback)
 			if err != nil {
-				if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
-					continue
-				}
-
-				if !s.closing {
-					fyne.LogError("Error when listening to changes", err)
-				}
 				return
 			}
-
-			switch resp[1] {
-			case 'p':
-				s.status.poweredOn = resp[3] == '1'
-			case 'v':
-				volume, _ := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
-				s.status.volume = uint(volume)
-			case 'm':
-				s.status.muted = resp[3] == '1'
-			case 'i':
-				input, _ := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
-				s.status.input, _ = device.NameFromNumber(device.H95, uint(input))
-			default:
-				continue
-			}
-
-			callback()
 		}
 	}()
 }
