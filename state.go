@@ -11,8 +11,6 @@ import (
 	"github.com/Jacalz/hegelmote/remote"
 )
 
-const tempReadTimeout = time.Millisecond * 100
-
 type state struct {
 	poweredOn bool
 	volume    uint
@@ -25,7 +23,7 @@ type state struct {
 
 // sendLock unblocks the reading state tracker, locks and reverts back to blocking read.
 func (s *state) sendLock() {
-	s.control.Conn.SetReadDeadline(time.Now().Add(tempReadTimeout))
+	s.control.Conn.SetReadDeadline(time.Now())
 	s.lock.Lock()
 	s.control.Conn.SetReadDeadline(time.Time{})
 }
@@ -107,6 +105,7 @@ func (s *state) setInput(input string) {
 
 	s.input = input
 }
+
 func (s *state) listenForChanges(callback func()) {
 	go func() {
 		for {
