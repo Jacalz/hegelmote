@@ -17,8 +17,14 @@ type state struct {
 	muted     bool
 	input     string
 
+	closing bool
 	control *remote.Control
 	lock    sync.Mutex
+}
+
+func (s *state) disconnect() {
+	s.closing = true
+	s.control.Disconnect()
 }
 
 // sendLock unblocks the reading state tracker, locks and reverts back to blocking read.
@@ -117,8 +123,10 @@ func (s *state) listenForChanges(callback func()) {
 					continue
 				}
 
-				fyne.LogError("Error when listening to changes", err)
-				break
+				if !s.closing {
+					fyne.LogError("Error when listening to changes", err)
+				}
+				return
 			}
 
 			switch resp[1] {

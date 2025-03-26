@@ -99,8 +99,8 @@ func (r *remoteUI) onInputSelect(input string) {
 	r.syncState()
 }
 
-func buildRemoteUI(command *remote.Control, w fyne.Window) fyne.CanvasObject {
-	ui := remoteUI{window: w, amplifier: state{control: command}, model: device.H95}
+func buildRemoteUI(command *remote.Control, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
+	ui := &remoteUI{window: w, amplifier: state{control: command}, model: device.H95}
 	ui.amplifier.load()
 
 	ui.powerToggle = &widget.Button{Text: "Toggle power", OnTapped: ui.onPowerToggle}
@@ -123,7 +123,7 @@ func buildRemoteUI(command *remote.Control, w fyne.Window) fyne.CanvasObject {
 
 	ui.amplifier.listenForChanges(func() { fyne.Do(ui.syncState) })
 
-	return container.NewVBox(
+	return ui, container.NewVBox(
 		ui.powerToggle,
 		widget.NewSeparator(),
 		container.NewVBox(
@@ -141,14 +141,16 @@ func main() {
 	w := a.NewWindow("Hegelmote")
 
 	command := &remote.Control{}
-	defer command.Disconnect()
 
 	err := command.Connect("192.168.1.251:50001", device.H95)
 	if err != nil {
 		panic(err)
 	}
 
-	w.SetContent(buildRemoteUI(command, w))
+	ui, content := buildRemoteUI(command, w)
+	defer ui.amplifier.disconnect()
+
+	w.SetContent(content)
 	w.Resize(fyne.NewSize(300, 400))
 	w.SetMaster()
 	w.ShowAndRun()
