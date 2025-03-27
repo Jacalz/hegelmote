@@ -12,6 +12,16 @@ import (
 	"github.com/Jacalz/hegelmote/remote"
 )
 
+type refreshed uint8
+
+const (
+	none refreshed = iota
+	refreshPower
+	refreshVolume
+	refreshMute
+	refreshInput
+)
+
 type state struct {
 	poweredOn bool
 	volume    uint
@@ -129,7 +139,7 @@ func (s *statefulController) setInput(input string) {
 	s.status.input = input
 }
 
-func (s *statefulController) trackState() (refresh bool, err error) {
+func (s *statefulController) trackState() (refreshed, error) {
 	s.lock.Lock()
 	resp, err := s.control.Read()
 	s.lock.Unlock()
@@ -137,10 +147,10 @@ func (s *statefulController) trackState() (refresh bool, err error) {
 	if err != nil {
 		nerr, ok := err.(net.Error)
 		if (ok && nerr.Timeout()) || s.closing {
-			return false, nil
+			return none, nil
 		}
 
-		return false, err
+		return none, err
 	}
 
 	switch resp[1] {
@@ -149,32 +159,33 @@ func (s *statefulController) trackState() (refresh bool, err error) {
 	case 'v':
 		volume, err := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
 		if err != nil {
-			return false, err
+			return none, err
 		}
 		s.status.volume = uint(volume)
+		return refreshVolume, nil
 	case 'm':
 		s.status.muted = resp[3] == '1'
+		return refreshMute, nil
 	case 'i':
 		input, err := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
 		if err != nil {
-			return false, err
+			return none, err
 		}
 
 		inputName, err := device.NameFromNumber(device.H95, uint(input))
 		if err != nil {
-			return false, err
+			return none, err
 		}
 		s.status.input = inputName
+		return refreshInput, nil
 	case 'e':
-		return false, fmt.Errorf("got error code %d from amplifier", resp[3])
-	default:
-		return false, fmt.Errorf("unknown command \"%c\" received from amplifier", resp[1])
+		return none, fmt.Errorf("got error code %d from amplifier", resp[3])
 	}
 
-	return true, nil
+	return none, fmt.Errorf("unknown command \"%c\" received from amplifier", resp[1])
 }
 
-func (s *statefulController) trackChanges(callback func()) {
+func (s *statefulController) trackChanges(callback func(refreshed)) {
 	go func() {
 		for {
 			refresh, err := s.trackState()
@@ -183,8 +194,8 @@ func (s *statefulController) trackChanges(callback func()) {
 				return
 			}
 
-			if refresh {
-				callback()
+			if refresh != none {
+				callback(refresh)
 			}
 		}
 	}()
