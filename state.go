@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -136,13 +135,11 @@ func (s *statefulController) trackState() (refresh bool, err error) {
 	s.lock.Unlock()
 
 	if err != nil {
-		if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
+		nerr, ok := err.(net.Error)
+		if (ok && nerr.Timeout()) || s.closing {
 			return false, nil
 		}
 
-		if !s.closing {
-			fyne.LogError("Error when listening to changes", err)
-		}
 		return false, err
 	}
 
@@ -150,19 +147,28 @@ func (s *statefulController) trackState() (refresh bool, err error) {
 	case 'p':
 		s.status.poweredOn = resp[3] == '1'
 	case 'v':
-		volume, _ := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
+		volume, err := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
+		if err != nil {
+			return false, err
+		}
 		s.status.volume = uint(volume)
 	case 'm':
 		s.status.muted = resp[3] == '1'
 	case 'i':
-		input, _ := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
-		s.status.input, _ = device.NameFromNumber(device.H95, uint(input))
+		input, err := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
+		if err != nil {
+			return false, err
+		}
+
+		inputName, err := device.NameFromNumber(device.H95, uint(input))
+		if err != nil {
+			return false, err
+		}
+		s.status.input = inputName
 	case 'e':
-		fyne.LogError("Amplifier sent error", fmt.Errorf("error code %d", resp[3]))
+		return false, fmt.Errorf("got error code %d from amplifier", resp[3])
 	default:
-		err := errors.New("unknown command")
-		fyne.LogError("Amplifier sent unknown command", err)
-		return false, err
+		return false, fmt.Errorf("unknown command \"%c\" received from amplifier", resp[1])
 	}
 
 	return true, nil
@@ -173,6 +179,7 @@ func (s *statefulController) trackChanges(callback func()) {
 		for {
 			refresh, err := s.trackState()
 			if err != nil {
+				fyne.LogError("Error on tracking state change from amplifier", err)
 				return
 			}
 
