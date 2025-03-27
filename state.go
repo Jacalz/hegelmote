@@ -141,9 +141,9 @@ func (s *statefulController) setInput(input string) {
 
 func (s *statefulController) trackState() (refreshed, error) {
 	s.lock.Lock()
-	resp, err := s.control.Read()
-	s.lock.Unlock()
+	defer s.lock.Unlock()
 
+	resp, err := s.control.Read()
 	if err != nil {
 		nerr, ok := err.(net.Error)
 		if (ok && nerr.Timeout()) || s.closing {
