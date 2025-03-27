@@ -13,6 +13,7 @@ import (
 
 type remoteUI struct {
 	amplifier statefulController
+	current   state
 	window    fyne.Window
 
 	// Widgets:
@@ -24,7 +25,7 @@ type remoteUI struct {
 }
 
 func (r *remoteUI) refreshPower() {
-	if r.amplifier.status.poweredOn {
+	if r.current.poweredOn {
 		r.powerToggle.SetText("Power off")
 	} else {
 		r.powerToggle.SetText("Power on")
@@ -34,10 +35,10 @@ func (r *remoteUI) refreshPower() {
 func (r *remoteUI) refreshVolumeSlider() {
 	r.volumeSlider.OnChangeEnded = nil
 
-	r.volumeSlider.Value = float64(r.amplifier.status.volume)
+	r.volumeSlider.Value = float64(r.current.volume)
 	r.volumeSlider.OnChanged(r.volumeSlider.Value)
 
-	if r.amplifier.status.poweredOn && !r.amplifier.status.muted {
+	if r.current.poweredOn && !r.current.muted {
 		enableAndRefresh(r.volumeSlider)
 	} else {
 		disableAndRefresh(r.volumeSlider)
@@ -47,7 +48,7 @@ func (r *remoteUI) refreshVolumeSlider() {
 }
 
 func (r *remoteUI) refreshVolumeButtons() {
-	if r.amplifier.status.poweredOn {
+	if r.current.poweredOn {
 		r.volumeMute.Enable()
 		r.volumeDown.Enable()
 		r.volumeUp.Enable()
@@ -60,9 +61,9 @@ func (r *remoteUI) refreshVolumeButtons() {
 
 func (r *remoteUI) refreshInput() {
 	r.inputSelector.OnChanged = nil
-	r.inputSelector.Selected = r.amplifier.status.input
+	r.inputSelector.Selected = r.current.input
 
-	if r.amplifier.status.poweredOn {
+	if r.current.poweredOn {
 		enableAndRefresh(r.inputSelector)
 	} else {
 		disableAndRefresh(r.inputSelector)
@@ -79,7 +80,7 @@ func (r *remoteUI) fullRefresh() {
 }
 
 func (r *remoteUI) onPowerToggle() {
-	r.amplifier.togglePower()
+	r.current = r.amplifier.togglePower()
 	r.fullRefresh()
 }
 
@@ -88,27 +89,27 @@ func (r *remoteUI) onVolumeDrag(percentage float64) {
 }
 
 func (r *remoteUI) onVolumeDragEnd(percentage float64) {
-	r.amplifier.setVolume(uint8(percentage))
+	r.current = r.amplifier.setVolume(uint8(percentage))
 	r.refreshVolumeSlider()
 }
 
 func (r *remoteUI) onMute() {
-	r.amplifier.toggleMute()
+	r.current = r.amplifier.toggleMute()
 	r.refreshVolumeSlider()
 }
 
 func (r *remoteUI) onVolumeDown() {
-	r.amplifier.volumeDown()
+	r.current = r.amplifier.volumeDown()
 	r.refreshVolumeSlider()
 }
 
 func (r *remoteUI) onVolumeUp() {
-	r.amplifier.volumeUp()
+	r.current = r.amplifier.volumeUp()
 	r.refreshVolumeSlider()
 }
 
 func (r *remoteUI) onInputSelect(input string) {
-	r.amplifier.setInput(input)
+	r.current = r.amplifier.setInput(input)
 	r.refreshInput()
 }
 
@@ -131,19 +132,23 @@ func buildRemoteUI(command *remote.Control, w fyne.Window) (*remoteUI, fyne.Canv
 	inputs, _ := device.GetInputNames(ui.amplifier.control.Model) // TODO: Move this to a connection step.
 	ui.inputSelector = &widget.Select{Options: inputs, PlaceHolder: "Select an input", OnChanged: ui.onInputSelect}
 
-	ui.amplifier.load()
+	ui.current = ui.amplifier.load()
 	ui.fullRefresh()
 
 	ui.amplifier.trackChanges(
-		func(refresh refreshed) {
-			switch refresh {
-			case refreshPower:
-				fyne.Do(ui.fullRefresh)
-			case refreshVolume, refreshMute:
-				fyne.Do(ui.refreshVolumeSlider)
-			case refreshInput:
-				fyne.Do(ui.refreshInput)
-			}
+		func(refresh refreshed, newState state) {
+			fyne.Do(func() {
+				ui.current = newState
+
+				switch refresh {
+				case refreshPower:
+					ui.fullRefresh()
+				case refreshVolume, refreshMute:
+					ui.refreshVolumeSlider()
+				case refreshInput:
+					ui.refreshInput()
+				}
+			})
 		},
 	)
 
