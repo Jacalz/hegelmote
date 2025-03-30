@@ -59,7 +59,7 @@ func lookUpDevices() ([]discoveredDevice, error) {
 }
 
 func handleConnection(host string, model device.Device, remember bool, ui *remoteUI) {
-	if remember {
+	if remember && model <= device.H590 {
 		prefs := fyne.CurrentApp().Preferences()
 		prefs.SetString("host", host)
 		prefs.SetInt("model", int(model))
