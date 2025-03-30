@@ -62,7 +62,7 @@ func handleConnection(host string, model device.Device, remember bool, ui *remot
 	if remember && model <= device.H590 {
 		prefs := fyne.CurrentApp().Preferences()
 		prefs.SetString("host", host)
-		prefs.SetInt("model", int(model))
+		prefs.SetInt("model", int(model)) // #nosec - Checked by model <= device.H590 above!
 	}
 
 	ui.connect(host, model)
