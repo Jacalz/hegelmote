@@ -9,7 +9,7 @@ func main() {
 	a := app.NewWithID("io.github.jacalz.hegelmote")
 	w := a.NewWindow("Hegelmote")
 
-	ui, content := buildRemoteUI(w)
+	ui, content := buildRemoteUI(a, w)
 	defer ui.amplifier.disconnect()
 
 	w.SetContent(content)

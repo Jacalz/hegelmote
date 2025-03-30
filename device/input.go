@@ -24,6 +24,26 @@ var (
 	errInvalidInput  = errors.New("input not on device")
 )
 
+// FromString takes a model name as string and returns the corresponding [Device] ID for it.
+func FromString(device string) (Device, error) {
+	switch device {
+	case "Röst":
+		return Röst, nil
+	case "H95":
+		return H95, nil
+	case "H120":
+		return H120, nil
+	case "H190":
+		return H190, nil
+	case "H390":
+		return H390, nil
+	case "H590":
+		return H590, nil
+	}
+
+	return Device(^uint(0)), errInvalidDevice
+}
+
 // GetInputs returns the list of input names for the given device.
 func GetInputNames(device Device) ([]string, error) {
 	if device > H590 {

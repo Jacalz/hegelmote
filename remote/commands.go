@@ -13,10 +13,9 @@ type Control struct {
 	Conn net.Conn
 }
 
-// Connect connects to the supplied address.
-// The address should be on the format ip:port.
-func (c *Control) Connect(address string, model device.Device) error {
-	conn, err := net.Dial("tcp", address)
+// Connect connects to the supplied host address. A port should not be specified.
+func (c *Control) Connect(host string, model device.Device) error {
+	conn, err := net.Dial("tcp", host+":50001")
 	if err != nil {
 		return err
 	}

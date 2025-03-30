@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+
 	"github.com/Jacalz/hegelmote/device"
 )
 
@@ -112,26 +113,42 @@ func (r *remoteUI) onInputSelect(input string) {
 	r.refreshInput()
 }
 
-func (r *remoteUI) connect() []string {
-	ip := "192.168.1.251:50001"
-	model := device.H95
-
-	err := r.amplifier.Connect(ip, model)
+func (r *remoteUI) connect(host string, model device.Device) {
+	err := r.amplifier.Connect(host, model)
 	if err != nil {
 		fyne.LogError("Failed to connect to amplifier", err)
-		return nil
+		return
 	}
 
 	inputs, err := device.GetInputNames(model)
 	if err != nil {
 		fyne.LogError("Failed to get input names for model", err)
-		return nil
+		return
 	}
 
-	return inputs
+	r.inputSelector.Options = inputs
+	r.current = r.amplifier.load()
+	r.fullRefresh()
+
+	r.amplifier.trackChanges(
+		func(refresh refreshed, newState state) {
+			fyne.Do(func() {
+				r.current = newState
+
+				switch refresh {
+				case refreshPower:
+					r.fullRefresh()
+				case refreshVolume, refreshMute:
+					r.refreshVolumeSlider()
+				case refreshInput:
+					r.refreshInput()
+				}
+			})
+		},
+	)
 }
 
-func buildRemoteUI(w fyne.Window) (*remoteUI, fyne.CanvasObject) {
+func buildRemoteUI(a fyne.App, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
 	ui := &remoteUI{window: w}
 
 	ui.powerToggle = &widget.Button{Text: "Toggle power", OnTapped: ui.onPowerToggle}
@@ -147,26 +164,14 @@ func buildRemoteUI(w fyne.Window) (*remoteUI, fyne.CanvasObject) {
 	inputLabel := &widget.Label{Text: "Select input:", TextStyle: fyne.TextStyle{Bold: true}}
 	ui.inputSelector = &widget.Select{PlaceHolder: "Select an input", OnChanged: ui.onInputSelect}
 
-	ui.inputSelector.Options = ui.connect()
-	ui.current = ui.amplifier.load()
-	ui.fullRefresh()
-
-	ui.amplifier.trackChanges(
-		func(refresh refreshed, newState state) {
-			fyne.Do(func() {
-				ui.current = newState
-
-				switch refresh {
-				case refreshPower:
-					ui.fullRefresh()
-				case refreshVolume, refreshMute:
-					ui.refreshVolumeSlider()
-				case refreshInput:
-					ui.refreshInput()
-				}
-			})
-		},
-	)
+	prefs := a.Preferences()
+	host := prefs.String("host")
+	modelID := prefs.IntWithFallback("model", -1)
+	if host != "" && modelID >= 0 {
+		ui.connect(host, device.Device(modelID))
+	} else {
+		showConnectionDialog(ui, w)
+	}
 
 	return ui, container.NewVBox(
 		ui.powerToggle,
