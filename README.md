@@ -4,22 +4,16 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/Jacalz/hegelmote)](https://goreportcard.com/report/github.com/Jacalz/hegelmote)
 # Hegelmote
 
-This Go package allows remote IP control of Hegel amplifiers.
-It connects using tcp to the address and port of the amplifier and allows sending commands to control parameters like power, input and volume.
-
-The idea for this stems from wishing to create a free and open source alternative to [Hegel Remote](https://apps.apple.com/ca/app/hegel-remote/id1562489978). It also supports more devices than the official [Hegel Control app](https://support.hegel.com/product-articles/hegel-setup-app).
-
-While limited in functionality at the moment, the goal is to expand with better cli and gui offerings in the future.
-
-**NOTE**: We are not repsonsible for any damage to your equipment. This package is an unofficial app for controling the amplifiers and is in no way affiliated with the company [Hegel](https://www.hegel.com/en/).
-
-## Application
-
-There is currently a graphical interface in development as well. It is considered experimental for the moment. It is hardcoded to Hegel H95 at the default address and port.
+This project allows remote IP control of Hegel amplifiers by providing a Go module API, a graphical application and a CLI. It connects using TCP to the amplifier and allows sending commands to control parameters like power, input and volume.
 
 <p align="center">
   <img src="img/gui.png" />
 </p>
+
+The idea is to a free and open source alternative (without tracking) to [Hegel Remote](https://apps.apple.com/ca/app/hegel-remote/id1562489978). It also supports more devices than the official [Hegel Control app](https://support.hegel.com/product-articles/hegel-setup-app).
+
+**NOTE**: We are not responsible for any damage to your equipment. This package is an unofficial, and work i progress, project for controling the amplifiers and is in no way affiliated with the company [Hegel](https://www.hegel.com/en/).
+
 
 ## Supported Amplifiers
 
@@ -31,10 +25,6 @@ This software has only been tested on Hegel H95 but the list of supported models
 - H190
 - H390
 - H590
-
-### Might work (untested)
-
-- H190v
 
 ## Sources
 - **IP control command and Input table:** https://support.hegel.com/component/jdownloads/send/3-files/102-h95-h120-h190-h390-h590-ip-control-codes
