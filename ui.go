@@ -8,7 +8,6 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/Jacalz/hegelmote/device"
-	"github.com/Jacalz/hegelmote/remote"
 )
 
 type remoteUI struct {
@@ -113,9 +112,27 @@ func (r *remoteUI) onInputSelect(input string) {
 	r.refreshInput()
 }
 
-func buildRemoteUI(command *remote.Control, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
-	ui := &remoteUI{window: w, amplifier: statefulController{control: command}}
-	ui.amplifier.load()
+func (r *remoteUI) connect() []string {
+	ip := "192.168.1.251:50001"
+	model := device.H95
+
+	err := r.amplifier.Connect(ip, model)
+	if err != nil {
+		fyne.LogError("Failed to connect to amplifier", err)
+		return nil
+	}
+
+	inputs, err := device.GetInputNames(model)
+	if err != nil {
+		fyne.LogError("Failed to get input names for model", err)
+		return nil
+	}
+
+	return inputs
+}
+
+func buildRemoteUI(w fyne.Window) (*remoteUI, fyne.CanvasObject) {
+	ui := &remoteUI{window: w}
 
 	ui.powerToggle = &widget.Button{Text: "Toggle power", OnTapped: ui.onPowerToggle}
 
@@ -128,10 +145,9 @@ func buildRemoteUI(command *remote.Control, w fyne.Window) (*remoteUI, fyne.Canv
 	ui.volumeUp = &widget.Button{Icon: theme.VolumeUpIcon(), OnTapped: ui.onVolumeUp}
 
 	inputLabel := &widget.Label{Text: "Select input:", TextStyle: fyne.TextStyle{Bold: true}}
+	ui.inputSelector = &widget.Select{PlaceHolder: "Select an input", OnChanged: ui.onInputSelect}
 
-	inputs, _ := device.GetInputNames(ui.amplifier.control.Model) // TODO: Move this to a connection step.
-	ui.inputSelector = &widget.Select{Options: inputs, PlaceHolder: "Select an input", OnChanged: ui.onInputSelect}
-
+	ui.inputSelector.Options = ui.connect()
 	ui.current = ui.amplifier.load()
 	ui.fullRefresh()
 

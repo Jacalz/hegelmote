@@ -30,17 +30,17 @@ type state struct {
 }
 
 type statefulController struct {
+	remote.Control
 	status state
 
 	closing bool
-	control *remote.Control
 	lock    sync.Mutex
 }
 
 func (s *statefulController) disconnect() {
 	s.closing = true
 
-	err := s.control.Disconnect()
+	err := s.Disconnect()
 	if err != nil {
 		fyne.LogError("Failure on disconnecting", err)
 	}
@@ -48,14 +48,14 @@ func (s *statefulController) disconnect() {
 
 // sendLock unblocks the reading state tracker, locks and reverts back to blocking read.
 func (s *statefulController) sendLock() {
-	err := s.control.Conn.SetReadDeadline(time.Now())
+	err := s.Conn.SetReadDeadline(time.Now())
 	if err != nil {
 		fyne.LogError("Failure when unblocking state tracker", err)
 	}
 
 	s.lock.Lock()
 
-	err = s.control.Conn.SetReadDeadline(time.Time{})
+	err = s.Conn.SetReadDeadline(time.Time{})
 	if err != nil {
 		fyne.LogError("Failure when restoring state tracker setup", err)
 	}
@@ -65,7 +65,7 @@ func (s *statefulController) togglePower() state {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.control.TogglePower()
+	err := s.TogglePower()
 	if err != nil {
 		fyne.LogError("Failed to toggle power", err)
 		return s.status
@@ -79,7 +79,7 @@ func (s *statefulController) setVolume(percentage uint8) state {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.control.SetVolume(percentage)
+	err := s.SetVolume(percentage)
 	if err != nil {
 		fyne.LogError("Failed to set volume", err)
 		return s.status
@@ -93,7 +93,7 @@ func (s *statefulController) toggleMute() state {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.control.ToggleVolumeMute()
+	err := s.ToggleVolumeMute()
 	if err != nil {
 		fyne.LogError("Failed to toggle mute", err)
 		return s.status
@@ -107,7 +107,7 @@ func (s *statefulController) volumeDown() state {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.control.VolumeDown()
+	err := s.VolumeDown()
 	if err != nil {
 		fyne.LogError("Failed to lower volume", err)
 		return s.status
@@ -121,7 +121,7 @@ func (s *statefulController) volumeUp() state {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.control.VolumeUp()
+	err := s.VolumeUp()
 	if err != nil {
 		fyne.LogError("Failed to increase volume", err)
 		return s.status
@@ -135,7 +135,7 @@ func (s *statefulController) setInput(input string) state {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.control.SetSourceName(input)
+	err := s.SetSourceName(input)
 	if err != nil {
 		fyne.LogError("Failed to set input", err)
 		return s.status
@@ -149,7 +149,7 @@ func (s *statefulController) trackState() (refreshed, state, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	resp, err := s.control.Read()
+	resp, err := s.Read()
 	if err != nil {
 		nerr, ok := err.(net.Error)
 		if (ok && nerr.Timeout()) || s.closing {
@@ -208,7 +208,7 @@ func (s *statefulController) trackChanges(callback func(refreshed, state)) {
 }
 
 func (s *statefulController) load() state {
-	on, err := s.control.GetPower()
+	on, err := s.GetPower()
 	if err != nil {
 		fyne.LogError("Failed to read power status", err)
 		return s.status
@@ -216,7 +216,7 @@ func (s *statefulController) load() state {
 
 	s.status.poweredOn = on
 
-	volume, err := s.control.GetVolume()
+	volume, err := s.GetVolume()
 	if err != nil {
 		fyne.LogError("Failed to read volume", err)
 		return s.status
@@ -224,7 +224,7 @@ func (s *statefulController) load() state {
 
 	s.status.volume = volume
 
-	muted, err := s.control.GetVolumeMute()
+	muted, err := s.GetVolumeMute()
 	if err != nil {
 		fyne.LogError("Failed to read mute status", err)
 		return s.status
@@ -232,7 +232,7 @@ func (s *statefulController) load() state {
 
 	s.status.muted = muted
 
-	input, err := s.control.GetSourceName()
+	input, err := s.GetSourceName()
 	if err != nil {
 		fyne.LogError("Failed to get current input", err)
 		return s.status
