@@ -1,3 +1,7 @@
+[![Go API Reference](https://img.shields.io/badge/go-documentation-blue.svg?style=flat)](https://pkg.go.dev/github.com/Jacalz/hegelmote)
+[![Tests](https://github.com/Jacalz/hegelmote/actions/workflows/tests.yml/badge.svg)](https://github.com/Jacalz/hegelmote/actions/workflows/tests.yml)
+[![Analysis](https://github.com/Jacalz/hegelmote/actions/workflows/analysis.yml/badge.svg)](https://github.com/Jacalz/hegelmote/actions/workflows/analysis.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Jacalz/hegelmote)](https://goreportcard.com/report/github.com/Jacalz/hegelmote)
 # Hegelmote
 
 This Go package allows remote IP control of Hegel amplifiers.
