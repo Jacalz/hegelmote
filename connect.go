@@ -19,9 +19,8 @@ import (
 )
 
 type discoveredDevice struct {
-	host      string
-	model     device.Device
-	modelName string
+	host  string
+	model device.Device
 }
 
 func lookUpDevices() ([]discoveredDevice, error) {
@@ -51,13 +50,22 @@ func lookUpDevices() ([]discoveredDevice, error) {
 		}
 
 		devices = append(devices, discoveredDevice{
-			host:      rawURL.Hostname(),
-			modelName: found.ModelName,
-			model:     model,
+			host:  rawURL.Hostname(),
+			model: model,
 		})
 	}
 
 	return devices, nil
+}
+
+func handleConnection(host string, model device.Device, remember bool, ui *remoteUI) {
+	if remember {
+		prefs := fyne.CurrentApp().Preferences()
+		prefs.SetString("host", host)
+		prefs.SetInt("model", int(model))
+	}
+
+	ui.connect(host, model)
 }
 
 func selectManually(ui *remoteUI, w fyne.Window) {
@@ -73,14 +81,8 @@ func selectManually(ui *remoteUI, w fyne.Window) {
 		OnTapped: func() {
 			host := hostname.Text
 			model, _ := device.FromString(models.Selected)
+			handleConnection(host, model, remember.Checked, ui)
 
-			if remember.Checked {
-				prefs := fyne.CurrentApp().Preferences()
-				prefs.SetString("host", host)
-				prefs.SetInt("model", int(model))
-			}
-
-			ui.connect(host, model)
 			connectionDialog.Hide()
 		},
 	}
@@ -103,7 +105,7 @@ func selectManually(ui *remoteUI, w fyne.Window) {
 }
 
 func selectFromOneDevice(remote discoveredDevice, ui *remoteUI, w fyne.Window) {
-	msg := widget.NewRichTextFromMarkdown(fmt.Sprintf("Found **Hegel %s** at **%s**.", remote.modelName, remote.host))
+	msg := widget.NewRichTextFromMarkdown(fmt.Sprintf("Found **Hegel %s** at **%s**.", device.SupportedDeviceNames()[remote.model], remote.host))
 	remember := &widget.Check{Text: "Remember connection"}
 	content := container.NewVBox(msg, remember)
 	connectionDialog := dialog.NewCustomWithoutButtons("Connect to device", content, w)
@@ -112,13 +114,7 @@ func selectFromOneDevice(remote discoveredDevice, ui *remoteUI, w fyne.Window) {
 		Text:       "Connect",
 		Importance: widget.HighImportance,
 		OnTapped: func() {
-			if remember.Checked {
-				prefs := fyne.CurrentApp().Preferences()
-				prefs.SetString("host", remote.host)
-				prefs.SetInt("model", int(remote.model))
-			}
-
-			ui.connect(remote.host, remote.model)
+			handleConnection(remote.host, remote.model, remember.Checked, ui)
 			connectionDialog.Hide()
 		},
 	}
@@ -129,7 +125,7 @@ func selectFromOneDevice(remote discoveredDevice, ui *remoteUI, w fyne.Window) {
 func selectFromMultipleDevices(remotes []discoveredDevice, ui *remoteUI, w fyne.Window) {
 	options := make([]string, 0, len(remotes))
 	for _, remote := range remotes {
-		options = append(options, fmt.Sprintf("Hegel %s \u2013 %s", remote.modelName, remote.host))
+		options = append(options, fmt.Sprintf("Hegel %s \u2013 %s", device.SupportedDeviceNames()[remote.model], remote.host))
 	}
 
 	msg := &widget.Label{Text: "Multiple devices were discovered:"}
@@ -148,13 +144,7 @@ func selectFromMultipleDevices(remotes []discoveredDevice, ui *remoteUI, w fyne.
 			}
 
 			remote := remotes[index]
-			if remember.Checked {
-				prefs := fyne.CurrentApp().Preferences()
-				prefs.SetString("host", remote.host)
-				prefs.SetInt("model", int(remote.model))
-			}
-
-			ui.connect(remote.host, remote.model)
+			handleConnection(remote.host, remote.model, remember.Checked, ui)
 			connectionDialog.Hide()
 		},
 	}
