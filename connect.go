@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"image/color"
+	"net/netip"
 	"net/url"
 	"strings"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -23,7 +25,10 @@ type discoveredDevice struct {
 }
 
 func lookUpDevices() ([]discoveredDevice, error) {
-	unfiltered, err := upnp.SearchMediaRenderers(context.TODO(), 1)
+	ctx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
+	defer cancel()
+
+	unfiltered, err := upnp.SearchMediaRenderers(ctx, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -53,6 +58,48 @@ func lookUpDevices() ([]discoveredDevice, error) {
 	}
 
 	return devices, nil
+}
+
+func selectManually(ui *remoteUI, w fyne.Window) {
+	hostname := &widget.Entry{PlaceHolder: "IP Address (no port)"}
+	models := &widget.Select{PlaceHolder: "Device type", Options: device.SupportedDeviceNames()}
+	remember := &widget.Check{Text: "Remember connection"}
+	content := container.NewVBox(hostname, models, remember)
+
+	connectionDialog := dialog.NewCustomWithoutButtons("Connect to device", content, w)
+	connect := &widget.Button{
+		Text:       "Connect",
+		Importance: widget.HighImportance,
+		OnTapped: func() {
+			host := hostname.Text
+			model, _ := device.FromString(models.Selected)
+
+			if remember.Checked {
+				prefs := fyne.CurrentApp().Preferences()
+				prefs.SetString("host", host)
+				prefs.SetInt("model", int(model))
+			}
+
+			ui.connect(host, model)
+			connectionDialog.Hide()
+		},
+	}
+
+	connect.Disable()
+	hostname.OnChanged = func(_ string) {
+		_, errIP := netip.ParseAddr(hostname.Text)
+		hasModel := models.SelectedIndex() != -1
+		if errIP == nil && hasModel {
+			connect.Enable()
+			return
+		}
+
+		connect.Disable()
+	}
+	models.OnChanged = hostname.OnChanged
+
+	connectionDialog.SetButtons([]fyne.CanvasObject{connect})
+	fyne.Do(connectionDialog.Show)
 }
 
 func selectFromOneDevice(remote discoveredDevice, ui *remoteUI, w fyne.Window) {
@@ -132,11 +179,11 @@ func showConnectionDialog(ui *remoteUI, w fyne.Window) {
 		devices, err := lookUpDevices()
 		if err != nil || len(devices) == 0 {
 			fyne.LogError("Failed to search for devices", err)
-			dialog.ShowInformation("No devices found", "The LAN did not seem to contain any supported devices.", w)
+			selectManually(ui, w)
 			return
 		}
 
-		if len(devices) == 1 {
+		if len(devices) > 1 {
 			selectFromMultipleDevices(devices, ui, w)
 			return
 		}
