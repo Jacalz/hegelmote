@@ -3,7 +3,7 @@ module github.com/Jacalz/hegelmote
 go 1.23.0
 
 require (
-	fyne.io/fyne/v2 v2.6.0-beta1.0.20250329183023-62e7f55d8afa
+	fyne.io/fyne/v2 v2.6.0-beta1.0.20250330210720-ecaa745b72dc
 	github.com/supersonic-app/go-upnpcast v0.0.0-20250330154256-b957204209a5
 )
 
