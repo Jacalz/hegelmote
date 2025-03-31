@@ -154,7 +154,7 @@ func (r *remoteUI) setUpConnection(prefs fyne.Preferences, w fyne.Window) {
 	host := prefs.String("host")
 	modelID := prefs.IntWithFallback("model", -1)
 	if host != "" && modelID >= 0 && modelID <= int(device.H590) {
-		err := r.connect(host, device.Device(modelID))
+		err := r.connect(host, device.Device(modelID)) // #nosec - Range is checked above!
 		if err == nil {
 			return
 		}
