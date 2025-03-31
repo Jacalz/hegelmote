@@ -59,13 +59,17 @@ func lookUpDevices() ([]discoveredDevice, error) {
 }
 
 func handleConnection(host string, model device.Device, remember bool, ui *remoteUI) {
+	err := ui.connect(host, model)
+	if err != nil {
+		fyne.LogError("Failed to connect", err)
+		return
+	}
+
 	if remember && model <= device.H590 {
 		prefs := fyne.CurrentApp().Preferences()
 		prefs.SetString("host", host)
 		prefs.SetInt("model", int(model)) // #nosec - Checked by model <= device.H590 above!
 	}
-
-	ui.connect(host, model)
 }
 
 func selectManually(ui *remoteUI, w fyne.Window) {

@@ -113,17 +113,17 @@ func (r *remoteUI) onInputSelect(input string) {
 	r.refreshInput()
 }
 
-func (r *remoteUI) connect(host string, model device.Device) {
+func (r *remoteUI) connect(host string, model device.Device) error {
 	err := r.amplifier.Connect(host, model)
 	if err != nil {
 		fyne.LogError("Failed to connect to amplifier", err)
-		return
+		return err
 	}
 
 	inputs, err := device.GetInputNames(model)
 	if err != nil {
 		fyne.LogError("Failed to get input names for model", err)
-		return
+		return err
 	}
 
 	r.inputSelector.Options = inputs
@@ -146,6 +146,25 @@ func (r *remoteUI) connect(host string, model device.Device) {
 			})
 		},
 	)
+
+	return nil
+}
+
+func (r *remoteUI) setUpConnection(prefs fyne.Preferences, w fyne.Window) {
+	host := prefs.String("host")
+	modelID := prefs.IntWithFallback("model", -1)
+	if host != "" && modelID >= 0 && modelID <= int(device.H590) {
+		err := r.connect(host, device.Device(modelID))
+		if err == nil {
+			return
+		}
+
+		fyne.LogError("Failed to connect to saved connection", err)
+		prefs.RemoveValue("host")
+		prefs.RemoveValue("model")
+	}
+
+	showConnectionDialog(r, w)
 }
 
 func buildRemoteUI(a fyne.App, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
@@ -164,14 +183,7 @@ func buildRemoteUI(a fyne.App, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
 	inputLabel := &widget.Label{Text: "Select input:", TextStyle: fyne.TextStyle{Bold: true}}
 	ui.inputSelector = &widget.Select{PlaceHolder: "Select an input", OnChanged: ui.onInputSelect}
 
-	prefs := a.Preferences()
-	host := prefs.String("host")
-	modelID := prefs.IntWithFallback("model", -1)
-	if host != "" && modelID >= 0 {
-		ui.connect(host, device.Device(modelID))
-	} else {
-		showConnectionDialog(ui, w)
-	}
+	ui.setUpConnection(a.Preferences(), w)
 
 	return ui, container.NewVBox(
 		ui.powerToggle,
