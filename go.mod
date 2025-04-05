@@ -3,7 +3,7 @@ module github.com/Jacalz/hegelmote
 go 1.23.0
 
 require (
-	fyne.io/fyne/v2 v2.6.0-beta1.0.20250330210720-ecaa745b72dc
+	fyne.io/fyne/v2 v2.6.0-rc2
 	github.com/supersonic-app/go-upnpcast v0.0.0-20250330154256-b957204209a5
 )
 
@@ -16,7 +16,7 @@ require (
 	github.com/fyne-io/gl-js v0.1.0 // indirect
 	github.com/fyne-io/glfw-js v0.2.0 // indirect
 	github.com/fyne-io/image v0.1.1 // indirect
-	github.com/fyne-io/oksvg v0.0.0-20250329173316-7ddb0d1149d1 // indirect
+	github.com/fyne-io/oksvg v0.1.0 // indirect
 	github.com/go-gl/gl v0.0.0-20231021071112-07e5d0ea2e71 // indirect
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20240506104042-037f3cc74f2a // indirect
 	github.com/go-text/render v0.2.0 // indirect
