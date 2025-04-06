@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Hegelmote
+GenericName=Hegel Amplifier Remote
+Comment=Control your Hegel amplifier remotely.
+Categories=Audio;AudioVideo;Network;
+Keywords=Hegel;amplifier;music;audio;control;remote;fyne;
+Icon=io.github.jacalz.hegelmote
+Exec=hegelmote
+Terminal=false

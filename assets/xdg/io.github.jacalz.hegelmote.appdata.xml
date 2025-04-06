@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.jacalz.hegelmote</id>
+
+  <name>Hegelmote</name>
+  <developer_name>Jacalz</developer_name>
+  <summary>Control Hegel amplifier remotely</summary>
+
+  <metadata_license>MIT</metadata_license>
+  <project_license>Apache-2</project_license>
+
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+
+  <description>
+    <p>Hegelmote allows connecting to a supported Hegel amplifier to change turn it on or off, select input and change volume.</p> 
+  </description>
+
+  <launchable type="desktop-id">io.github.jacalz.hegelmote.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://github.com/Jacalz/hegelmote/raw/main/img/gui.png</image>
+      <caption>Connected to device</caption>
+    </screenshot>
+  </screenshots>
+
+  <url type="bugtracker">https://github.com/Jacalz/hegelmote/issues</url>
+  <url type="donation">https://github.com/sponsors/Jacalz</url>
+  <url type="homepage">https://github.com/Jacalz/hegelmote/</url>
+  <url type="vcs-browser">https://github.com/Jacalz/hegelmote</url>
+  <url type="help">https://github.com/Jacalz/hegelmote/wiki</url>
+  <url type="contact">https://github.com/Jacalz/hegelmote/discussions</url>
+  <url type="contribute">https://github.com/Jacalz/hegelmote/blob/main/CONTRIBUTING.md</url>
+  <url type="faq">https://github.com/Jacalz/hegelmote/wiki/FAQ</url>
+
+  <content_rating type="oars-1.0" />
+
+  <!-- Override the kudos that aren't automatically added. See https://gitlab.gnome.org/GNOME/gnome-software/blob/main/doc/kudos.md. -->
+  <kudos>
+    <kudo>ModernToolkit</kudo>
+    <kudo>Notifications</kudo>
+  </kudos>
+
+  <!-- Needed to satisfy https://docs.flathub.org/docs/for-app-authors/metainfo-guidelines/quality-guidelines/#has-primary-brand-colors. -->
+  <branding>
+    <color type="primary" scheme_preference="light">#414141</color>
+    <color type="primary" scheme_preference="dark">#1b1b1a</color>
+  </branding>
+
+  <releases>
+    <release version="0.6.0" date="2025-03-30" type="stable">
+      <url type="details">https://github.com/Jacalz/hegelmote/releases/tag/v0.6.0</url>
+    </release>
+  </releases>
+
+</component>

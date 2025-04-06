@@ -1,5 +1,5 @@
 [Details]
-  Icon = "img/icon.png"
+  Icon = "assets/img/icon.png"
   Name = "Hegelmote"
   ID = "io.github.jacalz.hegelmote"
   Version = "0.6.0"
@@ -9,7 +9,7 @@
   fyneDo = true
 
 [LinuxAndBSD]
-  GenericName = "Hegel Amplifier Controller"
+  GenericName = "Hegel Amplifier Remote"
   Categories = ["Audio", "AudioVideo", "Network"]
-  Comment = "Control your Hegel amplifier over IP for seamless music playback."
-  Keywords = ["Hegel", "amplifier", "music", "audio", "control", "remote", "IP", "fyne"]
+  Comment = "Control your Hegel amplifier remotely."
+  Keywords = ["Hegel", "amplifier", "music", "audio", "control", "remote", "fyne"]
