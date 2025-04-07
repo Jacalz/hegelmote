@@ -21,6 +21,7 @@ type remoteUI struct {
 	volumeDisplay                    *widget.Label
 	volumeSlider                     *widget.Slider
 	volumeMute, volumeDown, volumeUp *widget.Button
+	inputLabel                       *widget.Label
 	inputSelector                    *widget.Select
 }
 
@@ -40,8 +41,10 @@ func (r *remoteUI) refreshVolumeSlider() {
 
 	if r.current.poweredOn && !r.current.muted {
 		enableAndRefresh(r.volumeSlider)
+		setLabelImportance(r.volumeDisplay, widget.MediumImportance)
 	} else {
 		disableAndRefresh(r.volumeSlider)
+		setLabelImportance(r.volumeDisplay, widget.LowImportance)
 	}
 
 	r.volumeSlider.OnChangeEnded = r.onVolumeDragEnd
@@ -64,8 +67,10 @@ func (r *remoteUI) refreshInput() {
 	r.inputSelector.Selected = r.current.input
 
 	if r.current.poweredOn {
+		setLabelImportance(r.inputLabel, widget.MediumImportance)
 		enableAndRefresh(r.inputSelector)
 	} else {
+		setLabelImportance(r.inputLabel, widget.LowImportance)
 		disableAndRefresh(r.inputSelector)
 	}
 
@@ -180,7 +185,7 @@ func buildRemoteUI(a fyne.App, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
 	ui.volumeDown = &widget.Button{Icon: theme.VolumeDownIcon(), OnTapped: ui.onVolumeDown}
 	ui.volumeUp = &widget.Button{Icon: theme.VolumeUpIcon(), OnTapped: ui.onVolumeUp}
 
-	inputLabel := &widget.Label{Text: "Select input:", TextStyle: fyne.TextStyle{Bold: true}}
+	ui.inputLabel = &widget.Label{Text: "Select input:", TextStyle: fyne.TextStyle{Bold: true}}
 	ui.inputSelector = &widget.Select{PlaceHolder: "Select an input", OnChanged: ui.onInputSelect}
 
 	ui.setUpConnection(a.Preferences(), w)
@@ -193,7 +198,7 @@ func buildRemoteUI(a fyne.App, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
 			container.NewGridWithColumns(3, ui.volumeMute, ui.volumeDown, ui.volumeUp),
 		),
 		widget.NewSeparator(),
-		inputLabel,
+		ui.inputLabel,
 		ui.inputSelector,
 	)
 }
@@ -215,4 +220,13 @@ func disableAndRefresh(wid disableableWidget) {
 		wid.Refresh()
 	}
 	wid.Disable()
+}
+
+func setLabelImportance(label *widget.Label, importance widget.Importance) {
+	if label.Importance == importance {
+		return
+	}
+
+	label.Importance = importance
+	label.Refresh()
 }
