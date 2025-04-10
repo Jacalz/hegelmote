@@ -22,7 +22,7 @@ type remoteUI struct {
 
 	// Widgets:
 	powerToggle                      *widget.Button
-	volumeDisplay                    *widget.Label
+	volumeLabel, volumeDisplay       *widget.Label
 	volumeSlider                     *widget.Slider
 	volumeMute, volumeDown, volumeUp *widget.Button
 	inputLabel                       *widget.Label
@@ -44,9 +44,11 @@ func (r *remoteUI) refreshVolumeSlider() {
 	r.volumeSlider.OnChanged(r.volumeSlider.Value)
 
 	if r.current.poweredOn && !r.current.muted {
+		setLabelImportance(r.volumeLabel, widget.MediumImportance)
 		enableAndRefresh(r.volumeSlider)
 		setLabelImportance(r.volumeDisplay, widget.MediumImportance)
 	} else {
+		setLabelImportance(r.volumeLabel, widget.LowImportance)
 		disableAndRefresh(r.volumeSlider)
 		setLabelImportance(r.volumeDisplay, widget.LowImportance)
 	}
@@ -182,11 +184,10 @@ func buildRemoteUI(a fyne.App, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
 	powerIcon := theme.NewThemedResource(&fyne.StaticResource{StaticName: "power.svg", StaticContent: powerIconContents})
 	ui.powerToggle = &widget.Button{Icon: powerIcon, Text: "Toggle power", OnTapped: ui.onPowerToggle}
 
+	ui.volumeLabel = &widget.Label{Text: "Change volume:", TextStyle: fyne.TextStyle{Bold: true}}
 	ui.volumeDisplay = &widget.Label{Text: "0%"}
 	ui.volumeSlider = &widget.Slider{Min: 0, Max: 100, Step: 1, OnChanged: ui.onVolumeDrag, OnChangeEnded: ui.onVolumeDragEnd}
-
 	ui.volumeMute = &widget.Button{Icon: theme.VolumeMuteIcon(), OnTapped: ui.onMute}
-
 	ui.volumeDown = &widget.Button{Icon: theme.VolumeDownIcon(), OnTapped: ui.onVolumeDown}
 	ui.volumeUp = &widget.Button{Icon: theme.VolumeUpIcon(), OnTapped: ui.onVolumeUp}
 
@@ -198,10 +199,9 @@ func buildRemoteUI(a fyne.App, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
 	return ui, container.NewVBox(
 		ui.powerToggle,
 		widget.NewSeparator(),
-		container.NewVBox(
-			container.NewBorder(nil, nil, nil, ui.volumeDisplay, ui.volumeSlider),
-			container.NewGridWithColumns(3, ui.volumeMute, ui.volumeDown, ui.volumeUp),
-		),
+		ui.volumeLabel,
+		container.NewBorder(nil, nil, nil, ui.volumeDisplay, ui.volumeSlider),
+		container.NewGridWithColumns(3, ui.volumeMute, ui.volumeDown, ui.volumeUp),
 		widget.NewSeparator(),
 		ui.inputLabel,
 		ui.inputSelector,
