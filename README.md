@@ -7,7 +7,7 @@
 This project allows remote IP control of Hegel amplifiers through a graphical interface and the provided Go package. It connects using TCP to the amplifier and allows sending commands to control parameters like power, input and volume.
 
 <p align="center">
-  <img src="img/gui.png" />
+  <img src="assets/img/gui.png" />
 </p>
 
 The idea is to a free and open source alternative (without tracking) to [Hegel Remote](https://apps.apple.com/ca/app/hegel-remote/id1562489978). It also supports more devices than the official [Hegel Control app](https://support.hegel.com/product-articles/hegel-setup-app).
