@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"strconv"
 
 	"fyne.io/fyne/v2"
@@ -10,6 +11,9 @@ import (
 
 	"github.com/Jacalz/hegelmote/device"
 )
+
+//go:embed assets/img/power.svg
+var powerIconContents []byte
 
 type remoteUI struct {
 	amplifier statefulController
@@ -175,7 +179,8 @@ func (r *remoteUI) setUpConnection(prefs fyne.Preferences, w fyne.Window) {
 func buildRemoteUI(a fyne.App, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
 	ui := &remoteUI{window: w}
 
-	ui.powerToggle = &widget.Button{Text: "Toggle power", OnTapped: ui.onPowerToggle}
+	powerIcon := theme.NewThemedResource(&fyne.StaticResource{StaticName: "power.svg", StaticContent: powerIconContents})
+	ui.powerToggle = &widget.Button{Icon: powerIcon, Text: "Toggle power", OnTapped: ui.onPowerToggle}
 
 	ui.volumeDisplay = &widget.Label{Text: "0%"}
 	ui.volumeSlider = &widget.Slider{Min: 0, Max: 100, Step: 1, OnChanged: ui.onVolumeDrag, OnChangeEnded: ui.onVolumeDragEnd}
