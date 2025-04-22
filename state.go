@@ -16,6 +16,7 @@ type refreshed uint8
 
 const (
 	none refreshed = iota
+	closing
 	refreshPower
 	refreshVolume
 	refreshMute
@@ -38,6 +39,8 @@ type statefulController struct {
 }
 
 func (s *statefulController) disconnect() {
+	s.sendLock()
+	defer s.lock.Unlock()
 	s.closing = true
 
 	err := s.Disconnect()
@@ -152,8 +155,12 @@ func (s *statefulController) trackState() (refreshed, state, error) {
 	resp, err := s.Read()
 	if err != nil {
 		nerr, ok := err.(net.Error)
-		if (ok && nerr.Timeout()) || s.closing {
+		if ok && nerr.Timeout() {
 			return none, s.status, nil
+		}
+
+		if s.closing {
+			return closing, s.status, nil
 		}
 
 		return none, s.status, err
@@ -201,7 +208,9 @@ func (s *statefulController) trackChanges(callback func(refreshed, state)) {
 				return
 			}
 
-			if refresh != none {
+			if refresh == closing {
+				return
+			} else if refresh != none {
 				callback(refresh, status)
 			}
 		}

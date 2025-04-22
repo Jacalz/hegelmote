@@ -138,6 +138,17 @@ func (r *remoteUI) onConnectionInfo() {
 	}}
 
 	prefs := fyne.CurrentApp().Preferences()
+	var infoDialog *dialog.CustomDialog
+
+	disconnect := &widget.Button{Text: "Disconnect", Icon: theme.CancelIcon(), Importance: widget.LowImportance, OnTapped: func() {
+		infoDialog.Hide()
+		r.powerToggle.Disable()
+		r.connectionLabel.SetText("Disconnected")
+		r.amplifier.disconnect()
+		showConnectionDialog(r, r.window)
+		r.amplifier.closing = false
+	}}
+
 	forget := &widget.Button{Text: "Forget", Icon: theme.MediaReplayIcon(), Importance: widget.LowImportance}
 	forget.OnTapped = func() {
 		forget.Disable()
@@ -154,7 +165,8 @@ func (r *remoteUI) onConnectionInfo() {
 	prop := &canvas.Rectangle{}
 	prop.SetMinSize(fyne.NewSquareSize(theme.Padding()))
 
-	dialog.ShowCustom("Connection info", "Dismiss", container.NewVBox(info, forget, prop), r.window)
+	infoDialog = dialog.NewCustom("Connection info", "Dismiss", container.NewVBox(info, container.NewGridWithRows(1, disconnect, forget), prop), r.window)
+	infoDialog.Show()
 }
 
 func (r *remoteUI) connect(host string, model device.Device) error {
@@ -174,6 +186,7 @@ func (r *remoteUI) connect(host string, model device.Device) error {
 	r.current = r.amplifier.load()
 	r.host = host
 	r.connectionLabel.SetText("Connected")
+	r.powerToggle.Enable()
 	r.fullRefresh()
 
 	r.amplifier.trackChanges(
