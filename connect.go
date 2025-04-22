@@ -34,8 +34,7 @@ func lookUpDevices() ([]discoveredDevice, error) {
 
 	devices := []discoveredDevice{}
 	for _, found := range unfiltered {
-		_, ok := strings.CutPrefix(found.FriendlyName, "Hegel")
-		if !ok {
+		if !strings.HasPrefix(found.FriendlyName, "Hegel") {
 			continue
 		}
 
