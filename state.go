@@ -12,6 +12,8 @@ import (
 	"github.com/Jacalz/hegelmote/remote"
 )
 
+const resetInterval = 2 * time.Minute
+
 type refreshed uint8
 
 const (
@@ -21,6 +23,7 @@ const (
 	refreshVolume
 	refreshMute
 	refreshInput
+	reset
 )
 
 type state struct {
@@ -34,19 +37,37 @@ type statefulController struct {
 	remote.Control
 	status state
 
-	closing bool
-	lock    sync.Mutex
+	resetTicker *time.Ticker
+	closing     bool
+	lock        sync.Mutex
 }
 
 func (s *statefulController) disconnect() {
 	s.sendLock()
 	defer s.lock.Unlock()
+
 	s.closing = true
+	s.resetTicker.Stop()
 
 	err := s.Disconnect()
 	if err != nil {
 		fyne.LogError("Failure on disconnecting", err)
 	}
+}
+
+func (s *statefulController) runResetLoop() {
+	if s.resetTicker == nil {
+		s.resetTicker = time.NewTicker(resetInterval)
+	} else {
+		s.resetTicker.Reset(resetInterval)
+	}
+
+	go func() {
+		s.reset(3)
+		for range s.resetTicker.C {
+			s.reset(3)
+		}
+	}()
 }
 
 // sendLock unblocks the reading state tracker, locks and reverts back to blocking read.
@@ -148,6 +169,17 @@ func (s *statefulController) setInput(input string) state {
 	return s.status
 }
 
+func (s *statefulController) reset(delay remote.Minutes) {
+	s.sendLock()
+	defer s.lock.Unlock()
+
+	err := s.SetResetDelay(delay)
+	if err != nil {
+		fyne.LogError("Failed to send reset", err)
+		return
+	}
+}
+
 func (s *statefulController) trackState() (refreshed, state, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -192,6 +224,11 @@ func (s *statefulController) trackState() (refreshed, state, error) {
 		}
 		s.status.input = inputName
 		return refreshInput, s.status, nil
+	case 'r':
+		if resp[3] == '0' {
+			return reset, s.status, nil
+		}
+		return none, s.status, nil
 	case 'e':
 		return none, s.status, fmt.Errorf("got error code %d from amplifier", resp[3])
 	}

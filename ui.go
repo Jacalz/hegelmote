@@ -142,9 +142,7 @@ func (r *remoteUI) onConnectionInfo() {
 
 	disconnect := &widget.Button{Text: "Disconnect", Icon: theme.CancelIcon(), Importance: widget.LowImportance, OnTapped: func() {
 		infoDialog.Hide()
-		r.powerToggle.Disable()
-		r.connectionLabel.SetText("Disconnected")
-		r.amplifier.disconnect()
+		r.disconnect()
 		showConnectionDialog(r, r.window)
 		r.amplifier.closing = false
 	}}
@@ -201,12 +199,21 @@ func (r *remoteUI) connect(host string, model device.Device) error {
 					r.refreshVolumeSlider()
 				case refreshInput:
 					r.refreshInput()
+				case reset:
+					r.disconnect()
 				}
 			})
 		},
 	)
 
+	r.amplifier.runResetLoop()
 	return nil
+}
+
+func (r *remoteUI) disconnect() {
+	r.powerToggle.Disable()
+	r.amplifier.disconnect()
+	r.connectionLabel.SetText("Disconnected")
 }
 
 func (r *remoteUI) setUpConnection(prefs fyne.Preferences, w fyne.Window) {

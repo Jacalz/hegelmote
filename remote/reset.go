@@ -1,11 +1,12 @@
 package remote
 
-import (
-	"strconv"
-)
+import "strconv"
+
+// Minutes defines a number of 0 to 255 minutes.
+type Minutes = uint8
 
 // SetResetDelay sets a timeout, in minutes, for when to reset.
-func (c *Control) SetResetDelay(delay uint8) error {
+func (c *Control) SetResetDelay(delay Minutes) error {
 	packet := make([]byte, 0, 7)
 	packet = append(packet, "-r."...)
 	packet = strconv.AppendUint(packet, uint64(delay), 10)
