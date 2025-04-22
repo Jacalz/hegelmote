@@ -5,7 +5,10 @@ import (
 	"strconv"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
@@ -17,6 +20,7 @@ var powerIconContents []byte
 
 type remoteUI struct {
 	amplifier statefulController
+	host      string
 	current   state
 	window    fyne.Window
 
@@ -27,6 +31,8 @@ type remoteUI struct {
 	volumeMute, volumeDown, volumeUp *widget.Button
 	inputLabel                       *widget.Label
 	inputSelector                    *widget.Select
+	connectionLabel                  *widget.Label
+	connectionInfoButton             *widget.Button
 }
 
 func (r *remoteUI) refreshPower() {
@@ -124,6 +130,33 @@ func (r *remoteUI) onInputSelect(input string) {
 	r.refreshInput()
 }
 
+func (r *remoteUI) onConnectionInfo() {
+	info := &widget.Form{Items: []*widget.FormItem{
+		{Text: "Address", Widget: &widget.Label{Text: r.host}},
+		{Text: "Model", Widget: &widget.Label{Text: "Hegel " + device.SupportedDeviceNames()[r.amplifier.Model]}},
+		{Text: "Status", Widget: &widget.Label{Text: r.connectionLabel.Text}},
+	}}
+
+	prefs := fyne.CurrentApp().Preferences()
+	forget := &widget.Button{Text: "Forget", Icon: theme.MediaReplayIcon(), Importance: widget.LowImportance}
+	forget.OnTapped = func() {
+		forget.Disable()
+		prefs.RemoveValue("host")
+		prefs.RemoveValue("model")
+	}
+
+	host := prefs.String("host")
+	modelID := prefs.IntWithFallback("model", -1)
+	if host == "" || modelID == -1 {
+		forget.Disable()
+	}
+
+	prop := &canvas.Rectangle{}
+	prop.SetMinSize(fyne.NewSquareSize(theme.Padding()))
+
+	dialog.ShowCustom("Connection info", "Dismiss", container.NewVBox(info, forget, prop), r.window)
+}
+
 func (r *remoteUI) connect(host string, model device.Device) error {
 	err := r.amplifier.Connect(host, model)
 	if err != nil {
@@ -139,6 +172,8 @@ func (r *remoteUI) connect(host string, model device.Device) error {
 
 	r.inputSelector.Options = inputs
 	r.current = r.amplifier.load()
+	r.host = host
+	r.connectionLabel.SetText("Connected")
 	r.fullRefresh()
 
 	r.amplifier.trackChanges(
@@ -194,6 +229,9 @@ func buildRemoteUI(a fyne.App, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
 	ui.inputLabel = &widget.Label{Text: "Select input:", TextStyle: fyne.TextStyle{Bold: true}}
 	ui.inputSelector = &widget.Select{PlaceHolder: "Select an input", OnChanged: ui.onInputSelect}
 
+	ui.connectionLabel = &widget.Label{Text: "Disconnected", Truncation: fyne.TextTruncateEllipsis}
+	ui.connectionInfoButton = &widget.Button{Icon: theme.InfoIcon(), Importance: widget.LowImportance, OnTapped: ui.onConnectionInfo}
+
 	ui.setUpConnection(a.Preferences(), w)
 
 	return ui, container.NewVBox(
@@ -205,6 +243,8 @@ func buildRemoteUI(a fyne.App, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
 		widget.NewSeparator(),
 		ui.inputLabel,
 		ui.inputSelector,
+		layout.NewSpacer(),
+		container.NewBorder(nil, nil, nil, ui.connectionInfoButton, ui.connectionLabel),
 	)
 }
 
