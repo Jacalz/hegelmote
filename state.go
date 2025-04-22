@@ -162,6 +162,7 @@ func (s *statefulController) trackState() (refreshed, state, error) {
 	switch resp[1] {
 	case 'p':
 		s.status.poweredOn = resp[3] == '1'
+		return refreshPower, s.status, nil
 	case 'v':
 		volume, err := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
 		if err != nil {
