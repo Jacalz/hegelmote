@@ -34,6 +34,8 @@ func (c *Control) Disconnect() error {
 	return c.Conn.Close()
 }
 
+// Read provides access to reading out the raw data from the command buffer.
+// This can be used to listen for changes sent by the amplifier.
 func (c *Control) Read() ([]byte, error) {
 	buf := [len("-v.100\r")]byte{}
 
