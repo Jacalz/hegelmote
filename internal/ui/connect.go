@@ -1,4 +1,4 @@
-package main
+package ui
 
 import (
 	"context"
@@ -57,7 +57,7 @@ func lookUpDevices() ([]discoveredDevice, error) {
 	return devices, nil
 }
 
-func handleConnection(host string, model device.Device, remember bool, ui *remoteUI) {
+func handleConnection(host string, model device.Device, remember bool, ui *mainUI) {
 	err := ui.connect(host, model)
 	if err != nil {
 		fyne.LogError("Failed to connect", err)
@@ -71,7 +71,7 @@ func handleConnection(host string, model device.Device, remember bool, ui *remot
 	}
 }
 
-func selectManually(ui *remoteUI, w fyne.Window) {
+func selectManually(ui *mainUI, w fyne.Window) {
 	hostname := &widget.Entry{PlaceHolder: "IP Address (no port)"}
 	models := &widget.Select{PlaceHolder: "Device type", Options: device.SupportedDeviceNames()}
 	remember := &widget.Check{Text: "Remember connection"}
@@ -107,7 +107,7 @@ func selectManually(ui *remoteUI, w fyne.Window) {
 	fyne.Do(connectionDialog.Show)
 }
 
-func selectFromOneDevice(remote discoveredDevice, ui *remoteUI, w fyne.Window) {
+func selectFromOneDevice(remote discoveredDevice, ui *mainUI, w fyne.Window) {
 	msg := widget.NewRichTextFromMarkdown(fmt.Sprintf("Found **Hegel %s** at **%s**.", device.SupportedDeviceNames()[remote.model], remote.host))
 	remember := &widget.Check{Text: "Remember connection"}
 	content := container.NewVBox(msg, remember)
@@ -125,7 +125,7 @@ func selectFromOneDevice(remote discoveredDevice, ui *remoteUI, w fyne.Window) {
 	fyne.Do(connectionDialog.Show)
 }
 
-func selectFromMultipleDevices(remotes []discoveredDevice, ui *remoteUI, w fyne.Window) {
+func selectFromMultipleDevices(remotes []discoveredDevice, ui *mainUI, w fyne.Window) {
 	options := make([]string, 0, len(remotes))
 	for _, remote := range remotes {
 		options = append(options, fmt.Sprintf("Hegel %s \u2013 %s", device.SupportedDeviceNames()[remote.model], remote.host))
@@ -157,7 +157,7 @@ func selectFromMultipleDevices(remotes []discoveredDevice, ui *remoteUI, w fyne.
 	fyne.Do(connectionDialog.Show)
 }
 
-func showConnectionDialog(ui *remoteUI, w fyne.Window) {
+func showConnectionDialog(ui *mainUI, w fyne.Window) {
 	prop := canvas.NewRectangle(color.Transparent)
 	prop.SetMinSize(fyne.NewSquareSize(75))
 

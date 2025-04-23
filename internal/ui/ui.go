@@ -1,4 +1,4 @@
-package main
+package ui
 
 import (
 	_ "embed"
@@ -12,13 +12,11 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
+	"github.com/Jacalz/hegelmote/assets/img"
 	"github.com/Jacalz/hegelmote/device"
 )
 
-//go:embed assets/img/power.svg
-var powerIconContents []byte
-
-type remoteUI struct {
+type mainUI struct {
 	amplifier statefulController
 	host      string
 	current   state
@@ -35,106 +33,106 @@ type remoteUI struct {
 	connectionInfoButton             *widget.Button
 }
 
-func (r *remoteUI) refreshPower() {
-	if r.current.poweredOn {
-		r.powerToggle.SetText("Power off")
+func (m *mainUI) refreshPower() {
+	if m.current.poweredOn {
+		m.powerToggle.SetText("Power off")
 	} else {
-		r.powerToggle.SetText("Power on")
+		m.powerToggle.SetText("Power on")
 	}
 }
 
-func (r *remoteUI) refreshVolumeSlider() {
-	r.volumeSlider.OnChangeEnded = nil
+func (m *mainUI) refreshVolumeSlider() {
+	m.volumeSlider.OnChangeEnded = nil
 
-	r.volumeSlider.Value = float64(r.current.volume)
-	r.volumeSlider.OnChanged(r.volumeSlider.Value)
+	m.volumeSlider.Value = float64(m.current.volume)
+	m.volumeSlider.OnChanged(m.volumeSlider.Value)
 
-	if r.current.poweredOn && !r.current.muted {
-		setLabelImportance(r.volumeLabel, widget.MediumImportance)
-		enableAndRefresh(r.volumeSlider)
-		setLabelImportance(r.volumeDisplay, widget.MediumImportance)
+	if m.current.poweredOn && !m.current.muted {
+		setLabelImportance(m.volumeLabel, widget.MediumImportance)
+		enableAndRefresh(m.volumeSlider)
+		setLabelImportance(m.volumeDisplay, widget.MediumImportance)
 	} else {
-		setLabelImportance(r.volumeLabel, widget.LowImportance)
-		disableAndRefresh(r.volumeSlider)
-		setLabelImportance(r.volumeDisplay, widget.LowImportance)
+		setLabelImportance(m.volumeLabel, widget.LowImportance)
+		disableAndRefresh(m.volumeSlider)
+		setLabelImportance(m.volumeDisplay, widget.LowImportance)
 	}
 
-	r.volumeSlider.OnChangeEnded = r.onVolumeDragEnd
+	m.volumeSlider.OnChangeEnded = m.onVolumeDragEnd
 }
 
-func (r *remoteUI) refreshVolumeButtons() {
-	if r.current.poweredOn {
-		r.volumeMute.Enable()
-		r.volumeDown.Enable()
-		r.volumeUp.Enable()
+func (m *mainUI) refreshVolumeButtons() {
+	if m.current.poweredOn {
+		m.volumeMute.Enable()
+		m.volumeDown.Enable()
+		m.volumeUp.Enable()
 	} else {
-		r.volumeMute.Disable()
-		r.volumeDown.Disable()
-		r.volumeUp.Disable()
+		m.volumeMute.Disable()
+		m.volumeDown.Disable()
+		m.volumeUp.Disable()
 	}
 }
 
-func (r *remoteUI) refreshInput() {
-	r.inputSelector.OnChanged = nil
-	r.inputSelector.Selected = r.current.input
+func (m *mainUI) refreshInput() {
+	m.inputSelector.OnChanged = nil
+	m.inputSelector.Selected = m.current.input
 
-	if r.current.poweredOn {
-		setLabelImportance(r.inputLabel, widget.MediumImportance)
-		enableAndRefresh(r.inputSelector)
+	if m.current.poweredOn {
+		setLabelImportance(m.inputLabel, widget.MediumImportance)
+		enableAndRefresh(m.inputSelector)
 	} else {
-		setLabelImportance(r.inputLabel, widget.LowImportance)
-		disableAndRefresh(r.inputSelector)
+		setLabelImportance(m.inputLabel, widget.LowImportance)
+		disableAndRefresh(m.inputSelector)
 	}
 
-	r.inputSelector.OnChanged = r.onInputSelect
+	m.inputSelector.OnChanged = m.onInputSelect
 }
 
-func (r *remoteUI) fullRefresh() {
-	r.refreshPower()
-	r.refreshVolumeSlider()
-	r.refreshVolumeButtons()
-	r.refreshInput()
+func (m *mainUI) fullRefresh() {
+	m.refreshPower()
+	m.refreshVolumeSlider()
+	m.refreshVolumeButtons()
+	m.refreshInput()
 }
 
-func (r *remoteUI) onPowerToggle() {
-	r.current = r.amplifier.togglePower()
-	r.fullRefresh()
+func (m *mainUI) onPowerToggle() {
+	m.current = m.amplifier.togglePower()
+	m.fullRefresh()
 }
 
-func (r *remoteUI) onVolumeDrag(percentage float64) {
-	r.volumeDisplay.SetText(strconv.Itoa(int(percentage)) + "%")
+func (m *mainUI) onVolumeDrag(percentage float64) {
+	m.volumeDisplay.SetText(strconv.Itoa(int(percentage)) + "%")
 }
 
-func (r *remoteUI) onVolumeDragEnd(percentage float64) {
-	r.current = r.amplifier.setVolume(uint8(percentage))
-	r.refreshVolumeSlider()
+func (m *mainUI) onVolumeDragEnd(percentage float64) {
+	m.current = m.amplifier.setVolume(uint8(percentage))
+	m.refreshVolumeSlider()
 }
 
-func (r *remoteUI) onMute() {
-	r.current = r.amplifier.toggleMute()
-	r.refreshVolumeSlider()
+func (m *mainUI) onMute() {
+	m.current = m.amplifier.toggleMute()
+	m.refreshVolumeSlider()
 }
 
-func (r *remoteUI) onVolumeDown() {
-	r.current = r.amplifier.volumeDown()
-	r.refreshVolumeSlider()
+func (m *mainUI) onVolumeDown() {
+	m.current = m.amplifier.volumeDown()
+	m.refreshVolumeSlider()
 }
 
-func (r *remoteUI) onVolumeUp() {
-	r.current = r.amplifier.volumeUp()
-	r.refreshVolumeSlider()
+func (m *mainUI) onVolumeUp() {
+	m.current = m.amplifier.volumeUp()
+	m.refreshVolumeSlider()
 }
 
-func (r *remoteUI) onInputSelect(input string) {
-	r.current = r.amplifier.setInput(input)
-	r.refreshInput()
+func (m *mainUI) onInputSelect(input string) {
+	m.current = m.amplifier.setInput(input)
+	m.refreshInput()
 }
 
-func (r *remoteUI) onConnectionInfo() {
+func (m *mainUI) onConnectionInfo() {
 	info := &widget.Form{Items: []*widget.FormItem{
-		{Text: "Address", Widget: &widget.Label{Text: r.host}},
-		{Text: "Model", Widget: &widget.Label{Text: "Hegel " + device.SupportedDeviceNames()[r.amplifier.Model]}},
-		{Text: "Status", Widget: &widget.Label{Text: r.connectionLabel.Text}},
+		{Text: "Address", Widget: &widget.Label{Text: m.host}},
+		{Text: "Model", Widget: &widget.Label{Text: "Hegel " + device.SupportedDeviceNames()[m.amplifier.Model]}},
+		{Text: "Status", Widget: &widget.Label{Text: m.connectionLabel.Text}},
 	}}
 
 	prefs := fyne.CurrentApp().Preferences()
@@ -142,9 +140,9 @@ func (r *remoteUI) onConnectionInfo() {
 
 	disconnect := &widget.Button{Text: "Disconnect", Icon: theme.CancelIcon(), Importance: widget.LowImportance, OnTapped: func() {
 		infoDialog.Hide()
-		r.disconnect()
-		showConnectionDialog(r, r.window)
-		r.amplifier.closing = false
+		m.Disconnect()
+		showConnectionDialog(m, m.window)
+		m.amplifier.closing = false
 	}}
 
 	forget := &widget.Button{Text: "Forget", Icon: theme.MediaReplayIcon(), Importance: widget.LowImportance}
@@ -163,12 +161,12 @@ func (r *remoteUI) onConnectionInfo() {
 	prop := &canvas.Rectangle{}
 	prop.SetMinSize(fyne.NewSquareSize(theme.Padding()))
 
-	infoDialog = dialog.NewCustom("Connection info", "Dismiss", container.NewVBox(info, container.NewGridWithRows(1, disconnect, forget), prop), r.window)
+	infoDialog = dialog.NewCustom("Connection info", "Dismiss", container.NewVBox(info, container.NewGridWithRows(1, disconnect, forget), prop), m.window)
 	infoDialog.Show()
 }
 
-func (r *remoteUI) connect(host string, model device.Device) error {
-	err := r.amplifier.Connect(host, model)
+func (m *mainUI) connect(host string, model device.Device) error {
+	err := m.amplifier.Connect(host, model)
 	if err != nil {
 		fyne.LogError("Failed to connect to amplifier", err)
 		return err
@@ -180,47 +178,47 @@ func (r *remoteUI) connect(host string, model device.Device) error {
 		return err
 	}
 
-	r.inputSelector.Options = inputs
-	r.current = r.amplifier.load()
-	r.host = host
-	r.connectionLabel.SetText("Connected")
-	r.powerToggle.Enable()
-	r.fullRefresh()
+	m.inputSelector.Options = inputs
+	m.current = m.amplifier.load()
+	m.host = host
+	m.connectionLabel.SetText("Connected")
+	m.powerToggle.Enable()
+	m.fullRefresh()
 
-	r.amplifier.trackChanges(
+	m.amplifier.trackChanges(
 		func(refresh refreshed, newState state) {
 			fyne.Do(func() {
-				r.current = newState
+				m.current = newState
 
 				switch refresh {
 				case refreshPower:
-					r.fullRefresh()
+					m.fullRefresh()
 				case refreshVolume, refreshMute:
-					r.refreshVolumeSlider()
+					m.refreshVolumeSlider()
 				case refreshInput:
-					r.refreshInput()
+					m.refreshInput()
 				case reset:
-					r.disconnect()
+					m.Disconnect()
 				}
 			})
 		},
 	)
 
-	r.amplifier.runResetLoop()
+	m.amplifier.runResetLoop()
 	return nil
 }
 
-func (r *remoteUI) disconnect() {
-	r.powerToggle.Disable()
-	r.amplifier.disconnect()
-	r.connectionLabel.SetText("Disconnected")
+func (m *mainUI) Disconnect() {
+	m.powerToggle.Disable()
+	m.amplifier.disconnect()
+	m.connectionLabel.SetText("Disconnected")
 }
 
-func (r *remoteUI) setUpConnection(prefs fyne.Preferences, w fyne.Window) {
+func (m *mainUI) setUpConnection(prefs fyne.Preferences, w fyne.Window) {
 	host := prefs.String("host")
 	modelID := prefs.IntWithFallback("model", -1)
 	if host != "" && modelID >= 0 && modelID <= int(device.H590) {
-		err := r.connect(host, device.Device(modelID)) // #nosec - Range is checked above!
+		err := m.connect(host, device.Device(modelID)) // #nosec - Range is checked above!
 		if err == nil {
 			return
 		}
@@ -230,14 +228,14 @@ func (r *remoteUI) setUpConnection(prefs fyne.Preferences, w fyne.Window) {
 		prefs.RemoveValue("model")
 	}
 
-	showConnectionDialog(r, w)
+	showConnectionDialog(m, w)
 }
 
-func buildRemoteUI(a fyne.App, w fyne.Window) (*remoteUI, fyne.CanvasObject) {
-	ui := &remoteUI{window: w}
+// Build sets up and builds the main user interface.
+func Build(a fyne.App, w fyne.Window) (*mainUI, fyne.CanvasObject) {
+	ui := &mainUI{window: w}
 
-	powerIcon := theme.NewThemedResource(&fyne.StaticResource{StaticName: "power.svg", StaticContent: powerIconContents})
-	ui.powerToggle = &widget.Button{Icon: powerIcon, Text: "Toggle power", OnTapped: ui.onPowerToggle}
+	ui.powerToggle = &widget.Button{Icon: img.PowerIcon, Text: "Toggle power", OnTapped: ui.onPowerToggle}
 
 	ui.volumeLabel = &widget.Label{Text: "Change volume:", TextStyle: fyne.TextStyle{Bold: true}}
 	ui.volumeDisplay = &widget.Label{Text: "0%"}

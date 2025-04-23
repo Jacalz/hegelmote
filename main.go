@@ -3,14 +3,15 @@ package main
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"github.com/Jacalz/hegelmote/internal/ui"
 )
 
 func main() {
 	a := app.NewWithID("io.github.jacalz.hegelmote")
 	w := a.NewWindow("Hegelmote")
 
-	ui, content := buildRemoteUI(a, w)
-	defer ui.amplifier.disconnect()
+	ui, content := ui.Build(a, w)
+	defer ui.Disconnect()
 
 	w.SetContent(content)
 	w.Resize(fyne.NewSize(300, 400))
