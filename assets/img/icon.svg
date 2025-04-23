@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="512"
-   height="512"
-   viewBox="0 0 512 512"
+   width="128.00002"
+   height="127.99999"
+   viewBox="0 0 33.866671 33.866665"
    version="1.1"
    id="svg1"
    inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
@@ -18,17 +18,17 @@
    xmlns:svg="http://www.w3.org/2000/svg">
   <sodipodi:namedview
      id="namedview1"
-     pagecolor="#505050"
-     bordercolor="#eeeeee"
-     borderopacity="1"
-     inkscape:showpageshadow="0"
-     inkscape:pageopacity="0"
+     pagecolor="#ffffff"
+     bordercolor="currentColor"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#505050"
+     inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
-     inkscape:zoom="1.5440339"
-     inkscape:cx="227.65044"
-     inkscape:cy="230.56489"
+     inkscape:zoom="5.6568542"
+     inkscape:cx="7.601398"
+     inkscape:cy="51.442019"
      inkscape:window-width="2560"
      inkscape:window-height="1371"
      inkscape:window-x="0"
@@ -40,25 +40,26 @@
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     transform="translate(-32.279167,-138.64166)">
     <rect
-       style="fill:#1d1d1d;stroke:#ffffff;stroke-width:9.80843;stroke-dasharray:none;fill-opacity:1"
+       style="fill:#1d1d1d;fill-opacity:1;stroke:#f9f9f9;stroke-width:0.527139;stroke-dasharray:none"
        id="rect1"
-       width="502.19156"
-       height="502.19156"
-       x="4.9042149"
-       y="4.9042149"
-       ry="105.451" />
+       width="26.989529"
+       height="26.989529"
+       x="35.717739"
+       y="142.08023"
+       ry="5.6673055" />
     <text
        xml:space="preserve"
-       style="font-size:338.867px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#333333;stroke:#ffffff;stroke-width:56.6396;stroke-dasharray:none"
-       x="129.0076"
-       y="379.51767"
+       style="font-size:19.4496px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:none;stroke:#f9f9f9;stroke-width:3.25089;stroke-dasharray:none"
+       x="41.923653"
+       y="162.66441"
        id="text1"><tspan
          sodipodi:role="line"
          id="tspan1"
-         x="129.0076"
-         y="379.51767"
-         style="font-style:normal;font-variant:normal;font-weight:200;font-stretch:normal;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans Ultra-Light';baseline-shift:baseline;stroke-width:56.6396;fill:#333333">H</tspan></text>
+         x="41.923653"
+         y="162.66441"
+         style="font-style:normal;font-variant:normal;font-weight:200;font-stretch:normal;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans Ultra-Light';baseline-shift:baseline;fill:none;stroke-width:3.25089;stroke:#f9f9f9">H</tspan></text>
   </g>
 </svg>
