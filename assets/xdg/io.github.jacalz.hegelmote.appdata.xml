@@ -3,7 +3,7 @@
   <id>io.github.jacalz.hegelmote</id>
 
   <name>Hegelmote</name>
-  <developer>
+  <developer id="github.io">
     <name>Jacalz</name>
   </developer>
   <summary>Control Hegel amplifier remotely</summary>
