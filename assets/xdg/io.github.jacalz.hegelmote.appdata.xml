@@ -3,11 +3,13 @@
   <id>io.github.jacalz.hegelmote</id>
 
   <name>Hegelmote</name>
-  <developer_name>Jacalz</developer_name>
+  <developer>
+    <name>Jacalz</name>
+  </developer>
   <summary>Control Hegel amplifier remotely</summary>
 
   <metadata_license>MIT</metadata_license>
-  <project_license>Apache-2</project_license>
+  <project_license>Apache-2.0</project_license>
 
   <supports>
     <control>pointing</control>
@@ -21,8 +23,12 @@
   <launchable type="desktop-id">io.github.jacalz.hegelmote.desktop</launchable>
   <screenshots>
     <screenshot type="default">
-      <image>https://github.com/Jacalz/hegelmote/raw/main/img/gui.png</image>
-      <caption>Connected to device</caption>
+      <image>https://raw.githubusercontent.com/Jacalz/hegelmote/refs/heads/main/assets/img/gui-connected-turned-on.png</image>
+      <caption>Connected to device (powered on)</caption>
+    </screenshot>
+    <screenshot>
+	<image>https://raw.githubusercontent.com/Jacalz/hegelmote/refs/heads/main/assets/img/gui-connected-turned-off.png</image>
+	<caption>Connected to device (powered off)</caption>
     </screenshot>
   </screenshots>
 
