@@ -47,7 +47,9 @@ func (s *statefulController) disconnect() {
 	defer s.lock.Unlock()
 
 	s.closing = true
-	s.resetTicker.Stop()
+	if s.resetTicker != nil {
+		s.resetTicker.Stop()
+	}
 
 	err := s.Disconnect()
 	if err != nil {
@@ -72,17 +74,11 @@ func (s *statefulController) runResetLoop() {
 
 // sendLock unblocks the reading state tracker, locks and reverts back to blocking read.
 func (s *statefulController) sendLock() {
-	err := s.Conn.SetReadDeadline(time.Now())
-	if err != nil {
-		fyne.LogError("Failure when unblocking state tracker", err)
+	if s.Conn != nil && s.Conn.SetReadDeadline(time.Now()) == nil {
+		defer s.Conn.SetReadDeadline(time.Time{})
 	}
 
 	s.lock.Lock()
-
-	err = s.Conn.SetReadDeadline(time.Time{})
-	if err != nil {
-		fyne.LogError("Failure when restoring state tracker setup", err)
-	}
 }
 
 func (s *statefulController) togglePower() state {
