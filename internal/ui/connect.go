@@ -57,11 +57,11 @@ func lookUpDevices() ([]discoveredDevice, error) {
 	return devices, nil
 }
 
-func handleConnection(host string, model device.Device, remember bool, ui *mainUI) {
+func handleConnection(host string, model device.Device, remember bool, ui *mainUI) error {
 	err := ui.connect(host, model)
 	if err != nil {
 		fyne.LogError("Failed to connect", err)
-		return
+		return err
 	}
 
 	if remember && model <= device.H590 {
@@ -69,6 +69,7 @@ func handleConnection(host string, model device.Device, remember bool, ui *mainU
 		prefs.SetString("host", host)
 		prefs.SetInt("model", int(model)) // #nosec - Checked by model <= device.H590 above!
 	}
+	return nil
 }
 
 func selectManually(ui *mainUI, w fyne.Window) {
@@ -82,9 +83,12 @@ func selectManually(ui *mainUI, w fyne.Window) {
 		Text:       "Connect",
 		Importance: widget.HighImportance,
 		OnTapped: func() {
-			host := hostname.Text
 			model, _ := device.FromString(models.Selected)
-			handleConnection(host, model, remember.Checked, ui)
+			err := handleConnection(hostname.Text, model, remember.Checked, ui)
+			if err != nil {
+				dialog.ShowError(err, w)
+				return
+			}
 
 			connectionDialog.Hide()
 		},
@@ -117,7 +121,11 @@ func selectFromOneDevice(remote discoveredDevice, ui *mainUI, w fyne.Window) {
 		Text:       "Connect",
 		Importance: widget.HighImportance,
 		OnTapped: func() {
-			handleConnection(remote.host, remote.model, remember.Checked, ui)
+			err := handleConnection(remote.host, remote.model, remember.Checked, ui)
+			if err != nil {
+				selectManually(ui, w)
+				return
+			}
 			connectionDialog.Hide()
 		},
 	}
@@ -147,7 +155,11 @@ func selectFromMultipleDevices(remotes []discoveredDevice, ui *mainUI, w fyne.Wi
 			}
 
 			remote := remotes[index]
-			handleConnection(remote.host, remote.model, remember.Checked, ui)
+			err := handleConnection(remote.host, remote.model, remember.Checked, ui)
+			if err != nil {
+				selectManually(ui, w)
+				return
+			}
 			connectionDialog.Hide()
 		},
 	}
