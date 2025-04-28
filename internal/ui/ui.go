@@ -100,7 +100,7 @@ func (m *mainUI) onPowerToggle() {
 }
 
 func (m *mainUI) onVolumeDrag(percentage float64) {
-	m.volumeDisplay.SetText(strconv.Itoa(int(percentage)) + "%")
+	m.volumeDisplay.SetText(strconv.FormatUint(uint64(percentage), 10) + "%")
 }
 
 func (m *mainUI) onVolumeDragEnd(percentage float64) {
