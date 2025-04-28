@@ -1,30 +1,27 @@
 package remote
 
 import (
-	"errors"
 	"strconv"
 
 	"github.com/Jacalz/hegelmote/device"
 )
 
-var errSorceInputIsZero = errors.New("source indexing starts at 1")
-
-// SetSourceName tells the amplifier to switch to the corresponding source name.
+// SetInputFromName tells the amplifier to switch to the corresponding source name.
 // The input name should match one for the given device type.
-func (c *Control) SetSourceName(name string) error {
+func (c *Control) SetInputFromName(name string) error {
 	number, err := device.InputFromName(c.Model, name)
 	if err != nil {
 		return err
 	}
 
-	return c.SetSourceNumber(number)
+	return c.SetInput(number)
 }
 
-// SetSourceNumber sets the input source to the given number.
+// SetInput sets the input source to the given number.
 // This will fail if the source number does not exist on the device.
-func (c *Control) SetSourceNumber(number device.Input) error {
+func (c *Control) SetInput(number device.Input) error {
 	if number == 0 {
-		return errSorceInputIsZero
+		return errInputIsZero
 	}
 
 	packet := make([]byte, 0, 7)
@@ -40,10 +37,10 @@ func (c *Control) SetSourceNumber(number device.Input) error {
 	return c.parseErrorResponse()
 }
 
-// GetSourceName returns the currently selected input source.
+// GetInputName returns the currently selected input source.
 // The source number will try to map number to a source name on the device type.
-func (c *Control) GetSourceName() (string, error) {
-	input, err := c.GetSourceNumber()
+func (c *Control) GetInputName() (string, error) {
+	input, err := c.GetInput()
 	if err != nil {
 		return "", err
 	}
@@ -51,8 +48,8 @@ func (c *Control) GetSourceName() (string, error) {
 	return device.NameFromNumber(c.Model, input)
 }
 
-// GetSourceNumber returns the currently selected source number.
-func (c *Control) GetSourceNumber() (device.Input, error) {
+// GetInput returns the currently selected source number.
+func (c *Control) GetInput() (device.Input, error) {
 	_, err := c.Conn.Write([]byte("-i.?\r"))
 	if err != nil {
 		return 0, err

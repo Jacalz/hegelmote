@@ -7,8 +7,10 @@ var (
 	errMalformedCommand = errors.New("malformed command") // -e.1
 	errUnknownCommand   = errors.New("unknown command")   // -e.2
 	errInvalidParameter = errors.New("invalid parameter") // -e.3
+
 	errUnknownErrorCode = errors.New("received unknown error code")
 	errInvalidVolume    = errors.New("invalid volume")
+	errInputIsZero      = errors.New("source indexing starts at 1")
 )
 
 // Mapping of error values. Index zero corresponds to error 1 and so on.

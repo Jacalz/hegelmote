@@ -155,7 +155,7 @@ func (s *statefulController) setInput(input string) state {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.SetSourceName(input)
+	err := s.SetInputFromName(input)
 	if err != nil {
 		fyne.LogError("Failed to set input", err)
 		return s.status
@@ -275,7 +275,7 @@ func (s *statefulController) load() state {
 
 	s.status.muted = muted
 
-	input, err := s.GetSourceName()
+	input, err := s.GetInputName()
 	if err != nil {
 		fyne.LogError("Failed to get current input", err)
 		return s.status
