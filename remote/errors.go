@@ -8,6 +8,7 @@ var (
 	errUnknownCommand   = errors.New("unknown command")   // -e.2
 	errInvalidParameter = errors.New("invalid parameter") // -e.3
 	errUnknownErrorCode = errors.New("received unknown error code")
+	errInvalidVolume    = errors.New("invalid volume")
 )
 
 // Mapping of error values. Index zero corresponds to error 1 and so on.

@@ -28,7 +28,7 @@ const (
 
 type state struct {
 	poweredOn bool
-	volume    uint
+	volume    remote.Volume
 	muted     bool
 	input     string
 }
@@ -95,17 +95,17 @@ func (s *statefulController) togglePower() state {
 	return s.status
 }
 
-func (s *statefulController) setVolume(percentage uint8) state {
+func (s *statefulController) setVolume(volume remote.Volume) state {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.SetVolume(percentage)
+	err := s.SetVolume(volume)
 	if err != nil {
 		fyne.LogError("Failed to set volume", err)
 		return s.status
 	}
 
-	s.status.volume = uint(percentage)
+	s.status.volume = volume
 	return s.status
 }
 
@@ -203,7 +203,7 @@ func (s *statefulController) trackState() (refreshed, state, error) {
 		if err != nil {
 			return none, s.status, err
 		}
-		s.status.volume = uint(volume)
+		s.status.volume = remote.Volume(volume)
 		return refreshVolume, s.status, nil
 	case 'm':
 		s.status.muted = resp[3] == '1'
@@ -214,7 +214,7 @@ func (s *statefulController) trackState() (refreshed, state, error) {
 			return none, s.status, err
 		}
 
-		inputName, err := device.NameFromNumber(device.H95, uint(input))
+		inputName, err := device.NameFromNumber(device.H95, device.Input(input))
 		if err != nil {
 			return none, s.status, err
 		}

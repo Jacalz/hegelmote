@@ -1,21 +1,19 @@
 package remote
 
-import (
-	"errors"
-	"strconv"
-)
+import "strconv"
 
-var errInvalidPercentage = errors.New("invalid percentage value")
+// Volume specifies a volume in the range 0 to 100.
+type Volume = uint8
 
 // SetVolume sets the volume to a value between 0 and 100.
-func (c *Control) SetVolume(percentage uint8) error {
-	if percentage > 100 {
-		return errInvalidPercentage
+func (c *Control) SetVolume(volume Volume) error {
+	if volume > 100 {
+		return errInvalidVolume
 	}
 
 	packet := make([]byte, 0, 7)
 	packet = append(packet, "-v."...)
-	packet = strconv.AppendUint(packet, uint64(percentage), 10)
+	packet = strconv.AppendUint(packet, uint64(volume), 10)
 	packet = append(packet, '\r')
 
 	_, err := c.Conn.Write(packet)
@@ -47,7 +45,7 @@ func (c *Control) VolumeDown() error {
 }
 
 // GetVolume returns the currrently selected volume percentage.
-func (c *Control) GetVolume() (uint, error) {
+func (c *Control) GetVolume() (Volume, error) {
 	_, err := c.Conn.Write([]byte("-v.?\r"))
 	if err != nil {
 		return 0, err
@@ -66,7 +64,7 @@ func (c *Control) GetVolume() (uint, error) {
 
 	volume := buf[3 : n-1]
 	percentage, err := strconv.ParseUint(string(volume), 10, 8)
-	return uint(percentage), err
+	return Volume(percentage), err
 }
 
 // SetVolumeMute allows turning on or off mute.
