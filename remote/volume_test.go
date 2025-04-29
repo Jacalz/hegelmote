@@ -7,7 +7,7 @@ import (
 func TestSetVolume(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.Fill()
+	mock.Fill("-v.0\r")
 
 	_, err := control.SetVolume(101)
 	if err == nil {
@@ -19,7 +19,7 @@ func TestSetVolume(t *testing.T) {
 		t.Fail()
 	}
 
-	mock.FlushToReader()
+	mock.Fill("-v.100\r")
 
 	_, err = control.SetVolume(100)
 	if err != nil || mock.writeBuf.String() != "-v.100\r" {
@@ -30,7 +30,7 @@ func TestSetVolume(t *testing.T) {
 func TestVolumeUp(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.Fill()
+	mock.Fill("-v.1\r")
 
 	_, err := control.VolumeUp()
 	if err != nil || mock.writeBuf.String() != "-v.u\r" {
@@ -41,7 +41,7 @@ func TestVolumeUp(t *testing.T) {
 func TestVolumeDown(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.Fill()
+	mock.Fill("-v.0\r")
 
 	_, err := control.VolumeDown()
 	if err != nil || mock.writeBuf.String() != "-v.d\r" {
@@ -52,7 +52,7 @@ func TestVolumeDown(t *testing.T) {
 func TestGetVolume(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.Fill()
+	mock.Fill("-v.0\r")
 
 	control.SetVolume(0)
 	mock.FlushToReader()

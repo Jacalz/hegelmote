@@ -8,7 +8,7 @@ import (
 func TestSetPower(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.Fill()
+	mock.Fill("-p.1\r")
 
 	_, err := control.SetPower(true)
 	if err != nil || mock.writeBuf.String() != "-p.1\r" {
@@ -16,7 +16,7 @@ func TestSetPower(t *testing.T) {
 		t.Fail()
 	}
 
-	mock.FlushToReader()
+	mock.Fill("-p.0\r")
 
 	_, err = control.SetPower(false)
 	if err != nil || mock.writeBuf.String() != "-p.0\r" {
@@ -27,7 +27,7 @@ func TestSetPower(t *testing.T) {
 func TestTogglePower(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.Fill()
+	mock.Fill("-p.0\r")
 
 	_, err := control.TogglePower()
 	if err != nil || mock.writeBuf.String() != "-p.t\r" {

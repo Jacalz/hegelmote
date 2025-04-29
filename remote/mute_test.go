@@ -1,11 +1,15 @@
 package remote
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/alecthomas/assert/v2"
+)
 
 func TestSetVolumeMute(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.Fill()
+	mock.Fill("-m.0\r")
 
 	_, err := control.SetVolumeMute(false)
 	if err != nil || mock.writeBuf.String() != "-m.0\r" {
@@ -23,12 +27,20 @@ func TestSetVolumeMute(t *testing.T) {
 func TestToggleVolumeMute(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.Fill()
+	mock.Fill("-m.1\r")
 
-	_, err := control.ToggleVolumeMute()
-	if err != nil || mock.writeBuf.String() != "-m.t\r" {
-		t.Fail()
-	}
+	muted, err := control.ToggleVolumeMute()
+	assert.NoError(t, err)
+	assert.True(t, muted)
+	assert.Equal(t, "-m.t\r", mock.writeBuf.String())
+
+	mock.Fill("-m.0\r")
+	mock.writeBuf.Reset()
+
+	muted, err = control.ToggleVolumeMute()
+	assert.NoError(t, err)
+	assert.False(t, muted)
+	assert.Equal(t, "-m.t\r", mock.writeBuf.String())
 }
 
 func TestGetVolumeMute(t *testing.T) {

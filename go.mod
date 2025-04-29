@@ -4,12 +4,14 @@ go 1.23.0
 
 require (
 	fyne.io/fyne/v2 v2.6.0
+	github.com/alecthomas/assert/v2 v2.11.0
 	github.com/supersonic-app/go-upnpcast v0.0.0-20250330154256-b957204209a5
 )
 
 require (
 	fyne.io/systray v1.11.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
+	github.com/alecthomas/repr v0.4.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fredbi/uri v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
@@ -25,6 +27,7 @@ require (
 	github.com/h2non/filetype v1.1.3 // indirect
 	github.com/hack-pad/go-indexeddb v0.3.2 // indirect
 	github.com/hack-pad/safejs v0.1.0 // indirect
+	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/jeandeaual/go-locale v0.0.0-20241217141322-fcc2cadd6f08 // indirect
 	github.com/jsummers/gobmp v0.0.0-20230614200233-a9de23ed2e25 // indirect
 	github.com/koron/go-ssdp v0.0.5 // indirect

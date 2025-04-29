@@ -7,14 +7,14 @@ import (
 func TestSetResetDelay(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.Fill()
+	mock.Fill("-r.0\r")
 
 	_, err := control.SetResetDelay(0)
 	if err != nil || mock.writeBuf.String() != "-r.0\r" {
 		t.Fail()
 	}
 
-	mock.FlushToReader()
+	mock.Fill("-r.255\r")
 
 	_, err = control.SetResetDelay(255)
 	if err != nil || mock.writeBuf.String() != "-r.255\r" {
@@ -25,7 +25,7 @@ func TestSetResetDelay(t *testing.T) {
 func TestStopResetDelay(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.Fill()
+	mock.Fill("-r.0\r")
 
 	_, err := control.StopResetDelay()
 	if err != nil || mock.writeBuf.String() != "-r.~\r" {

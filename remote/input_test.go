@@ -1,22 +1,22 @@
 package remote
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/alecthomas/assert/v2"
 )
 
 func TestSetInput(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.Fill()
+	mock.Fill("-i.0\r")
 
 	_, err := control.SetInput(0)
 	if err == nil {
 		t.Fail()
 	}
 
-	// Command returns the currently set input on success. Fill buffer.
-	mock.readBuf.WriteString("-i.1\r")
+	mock.Fill("-i.1\r")
 
 	_, err = control.SetInput(1)
 	if err != nil || mock.writeBuf.String() != "-i.1\r" {
@@ -28,7 +28,6 @@ func TestSetInput(t *testing.T) {
 
 	_, err = control.SetInput(8)
 	if err != nil || mock.writeBuf.String() != "-i.8\r" {
-		fmt.Println(err, mock.writeBuf.String())
 		t.Fail()
 	}
 }
@@ -36,7 +35,7 @@ func TestSetInput(t *testing.T) {
 func TestGetInput(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.Fill()
+	mock.Fill("-i.1\r")
 
 	control.SetInput(1)
 	mock.FlushToReader()
@@ -59,44 +58,38 @@ func TestGetInput(t *testing.T) {
 func TestSetInputFromName(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.Fill()
+	mock.Fill("-i.1\r")
 
 	_, err := control.SetInputFromName("Analog 1")
-	if err != nil || mock.writeBuf.String() != "-i.1\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "-i.1\r", mock.writeBuf.String())
 
 	mock.FlushToReader()
 
 	number, err := control.GetInput()
-	if err != nil || number != 1 {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, 1, number)
 
-	mock.FlushToReader()
+	mock.Fill("-i.8\r")
 
 	_, err = control.SetInputFromName("Network")
-	if err != nil || mock.writeBuf.String() != "-i.8\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "-i.8\r", mock.writeBuf.String())
 
 	mock.FlushToReader()
 
 	number, err = control.GetInput()
-	if err != nil || number != 8 {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, 8, number)
 
 	_, err = control.SetInputFromName("Bogus")
-	if err == nil {
-		t.Fail()
-	}
+	assert.Error(t, err)
 }
 
 func TestGetInputName(t *testing.T) {
 	control, mock := newControlMock()
 
-	mock.readBuf.WriteString("-i.1\r")
+	mock.Fill("-i.1\r")
 	control.SetInput(1)
 	mock.FlushToReader()
 
@@ -107,7 +100,7 @@ func TestGetInputName(t *testing.T) {
 
 	mock.Close()
 
-	mock.readBuf.WriteString("-i.8\r")
+	mock.Fill("-i.8\r")
 	control.SetInput(8)
 	mock.FlushToReader()
 
