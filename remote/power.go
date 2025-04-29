@@ -36,22 +36,9 @@ func (c *Control) GetPower() (bool, error) {
 }
 
 func (c *Control) parsePowerResponse() (bool, error) {
-	buf := [len("-p.?\r")]byte{}
-	n, err := c.Conn.Read(buf[:])
+	buf, err := c.read('p')
 	if err != nil {
 		return false, err
-	}
-
-	if n < 5 {
-		return false, errUnexpectedResponse
-	}
-
-	if buf[1] == 'e' {
-		return false, errorFromCode(buf[3])
-	}
-
-	if buf[1] != 'p' {
-		return false, errUnexpectedResponse
 	}
 
 	return buf[3] == '1', nil

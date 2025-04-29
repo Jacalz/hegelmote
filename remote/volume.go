@@ -55,25 +55,10 @@ func (c *Control) GetVolume() (Volume, error) {
 }
 
 func (c *Control) parseVolumeResponse() (Volume, error) {
-	buf := [len("-m.100\r")]byte{}
-	n, err := c.Conn.Read(buf[:])
+	buf, err := c.read('v')
 	if err != nil {
 		return 0, err
 	}
 
-	if n < 5 {
-		return 0, errUnexpectedResponse
-	}
-
-	if buf[1] == 'e' {
-		return 0, errorFromCode(buf[3])
-	}
-
-	if buf[1] != 'v' {
-		return 0, errUnexpectedResponse
-	}
-
-	volume := buf[3 : n-1]
-	percentage, err := strconv.ParseUint(string(volume), 10, 8)
-	return Volume(percentage), err
+	return parseUint8FromBuf(buf)
 }

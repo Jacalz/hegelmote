@@ -2,6 +2,7 @@ package remote
 
 import (
 	"net"
+	"strconv"
 
 	"github.com/Jacalz/hegelmote/device"
 )
@@ -44,5 +45,32 @@ func (c *Control) Read() ([]byte, error) {
 		return nil, err
 	}
 
+	if n < 5 {
+		return nil, errUnexpectedResponse
+	}
+
+	if buf[1] == 'e' {
+		return nil, errorFromCode(buf[3])
+	}
+
 	return buf[:n], nil
+}
+
+func (c *Control) read(expectedCommand byte) ([]byte, error) {
+	buf, err := c.Read()
+	if err != nil {
+		return nil, err
+	}
+
+	if buf[1] != expectedCommand {
+		return nil, errUnexpectedResponse
+	}
+
+	return buf, nil
+}
+
+func parseUint8FromBuf(buf []byte) (uint8, error) {
+	str := buf[3 : len(buf)-1]
+	number, err := strconv.ParseUint(string(str), 10, 8)
+	return uint8(number), err
 }

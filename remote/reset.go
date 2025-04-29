@@ -50,29 +50,15 @@ func (c *Control) GetResetDelay() (Delay, error) {
 }
 
 func (c *Control) parseResetResponse() (Delay, error) {
-	buf := [len("-r.255\r")]byte{}
-	n, err := c.Conn.Read(buf[:])
+	buf, err := c.read('r')
 	if err != nil {
 		return Delay{}, err
-	}
-
-	if n < 5 {
-		return Delay{}, errUnexpectedResponse
-	}
-
-	if buf[1] == 'e' {
-		return Delay{}, errorFromCode(buf[3])
-	}
-
-	if buf[1] != 'r' {
-		return Delay{}, errUnexpectedResponse
 	}
 
 	if buf[3] == '~' {
 		return Delay{Stopped: true}, nil
 	}
 
-	delay := buf[3 : n-1]
-	number, err := strconv.ParseUint(string(delay), 10, 8)
-	return Delay{Minutes: uint8(number)}, err
+	minutes, err := parseUint8FromBuf(buf)
+	return Delay{Minutes: minutes}, err
 }
