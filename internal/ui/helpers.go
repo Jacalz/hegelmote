@@ -2,8 +2,17 @@ package ui
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 )
+
+func showErrorIfNotNil(err error, w fyne.Window) {
+	if err == nil {
+		return
+	}
+
+	dialog.ShowError(err, w)
+}
 
 func setEnabled(wid fyne.Disableable, enable bool) {
 	if !enable {

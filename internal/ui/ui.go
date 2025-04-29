@@ -92,6 +92,7 @@ func (m *mainUI) fullRefresh() {
 
 func (m *mainUI) onPowerToggle() {
 	on, err := m.amplifier.togglePower()
+	showErrorIfNotNil(err, m.window)
 	if err == nil {
 		m.current.poweredOn = on
 		m.fullRefresh()
@@ -104,6 +105,7 @@ func (m *mainUI) onVolumeDrag(percentage float64) {
 
 func (m *mainUI) onVolumeDragEnd(percentage float64) {
 	volume, err := m.amplifier.setVolume(remote.Volume(percentage))
+	showErrorIfNotNil(err, m.window)
 	if err == nil {
 		m.current.volume = volume
 		m.refreshVolumeSlider()
@@ -112,6 +114,7 @@ func (m *mainUI) onVolumeDragEnd(percentage float64) {
 
 func (m *mainUI) onMute() {
 	muted, err := m.amplifier.toggleMute()
+	showErrorIfNotNil(err, m.window)
 	if err == nil {
 		m.current.muted = muted
 		m.refreshVolumeSlider()
@@ -120,6 +123,7 @@ func (m *mainUI) onMute() {
 
 func (m *mainUI) onVolumeDown() {
 	volume, err := m.amplifier.volumeDown()
+	showErrorIfNotNil(err, m.window)
 	if err == nil {
 		m.current.volume = volume
 		m.refreshVolumeSlider()
@@ -128,6 +132,7 @@ func (m *mainUI) onVolumeDown() {
 
 func (m *mainUI) onVolumeUp() {
 	volume, err := m.amplifier.volumeUp()
+	showErrorIfNotNil(err, m.window)
 	if err == nil {
 		m.current.volume = volume
 		m.refreshVolumeSlider()
@@ -136,6 +141,7 @@ func (m *mainUI) onVolumeUp() {
 
 func (m *mainUI) onInputSelect(selected string) {
 	input, err := m.amplifier.setInput(device.Input(m.inputSelector.SelectedIndex() + 1))
+	showErrorIfNotNil(err, m.window)
 	if err == nil {
 		m.current.input = input
 		m.refreshInput()
