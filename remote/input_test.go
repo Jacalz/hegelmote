@@ -10,7 +10,7 @@ func TestSetInput(t *testing.T) {
 
 	mock.Fill()
 
-	err := control.SetInput(0)
+	_, err := control.SetInput(0)
 	if err == nil {
 		t.Fail()
 	}
@@ -18,7 +18,7 @@ func TestSetInput(t *testing.T) {
 	// Command returns the currently set input on success. Fill buffer.
 	mock.readBuf.WriteString("-i.1\r")
 
-	err = control.SetInput(1)
+	_, err = control.SetInput(1)
 	if err != nil || mock.writeBuf.String() != "-i.1\r" {
 		t.Fail()
 	}
@@ -26,7 +26,7 @@ func TestSetInput(t *testing.T) {
 	// Fill reader but clear writer.
 	mock.FlushToReader()
 
-	err = control.SetInput(8)
+	_, err = control.SetInput(8)
 	if err != nil || mock.writeBuf.String() != "-i.8\r" {
 		fmt.Println(err, mock.writeBuf.String())
 		t.Fail()
@@ -61,7 +61,7 @@ func TestSetInputFromName(t *testing.T) {
 
 	mock.Fill()
 
-	err := control.SetInputFromName("Analog 1")
+	_, err := control.SetInputFromName("Analog 1")
 	if err != nil || mock.writeBuf.String() != "-i.1\r" {
 		t.Fail()
 	}
@@ -75,7 +75,7 @@ func TestSetInputFromName(t *testing.T) {
 
 	mock.FlushToReader()
 
-	err = control.SetInputFromName("Network")
+	_, err = control.SetInputFromName("Network")
 	if err != nil || mock.writeBuf.String() != "-i.8\r" {
 		t.Fail()
 	}
@@ -87,7 +87,7 @@ func TestSetInputFromName(t *testing.T) {
 		t.Fail()
 	}
 
-	err = control.SetInputFromName("Bogus")
+	_, err = control.SetInputFromName("Bogus")
 	if err == nil {
 		t.Fail()
 	}

@@ -14,6 +14,7 @@ import (
 
 	"github.com/Jacalz/hegelmote/assets/img"
 	"github.com/Jacalz/hegelmote/device"
+	"github.com/Jacalz/hegelmote/remote"
 )
 
 type mainUI struct {
@@ -34,11 +35,12 @@ type mainUI struct {
 }
 
 func (m *mainUI) refreshPower() {
+	text := "Power off"
 	if m.current.poweredOn {
-		m.powerToggle.SetText("Power off")
-	} else {
-		m.powerToggle.SetText("Power on")
+		text = "Power on"
 	}
+
+	m.powerToggle.SetText(text)
 }
 
 func (m *mainUI) refreshVolumeSlider() {
@@ -74,7 +76,7 @@ func (m *mainUI) refreshVolumeButtons() {
 
 func (m *mainUI) refreshInput() {
 	m.inputSelector.OnChanged = nil
-	m.inputSelector.Selected = m.current.input
+	m.inputSelector.Selected = m.inputSelector.Options[m.current.input-1]
 
 	if m.current.poweredOn {
 		setLabelImportance(m.inputLabel, widget.MediumImportance)
@@ -95,8 +97,11 @@ func (m *mainUI) fullRefresh() {
 }
 
 func (m *mainUI) onPowerToggle() {
-	m.current = m.amplifier.togglePower()
-	m.fullRefresh()
+	on, err := m.amplifier.togglePower()
+	if err == nil {
+		m.current.poweredOn = on
+		m.fullRefresh()
+	}
 }
 
 func (m *mainUI) onVolumeDrag(percentage float64) {
@@ -104,28 +109,43 @@ func (m *mainUI) onVolumeDrag(percentage float64) {
 }
 
 func (m *mainUI) onVolumeDragEnd(percentage float64) {
-	m.current = m.amplifier.setVolume(uint8(percentage))
-	m.refreshVolumeSlider()
+	volume, err := m.amplifier.setVolume(remote.Volume(percentage))
+	if err == nil {
+		m.current.volume = volume
+		m.refreshVolumeSlider()
+	}
 }
 
 func (m *mainUI) onMute() {
-	m.current = m.amplifier.toggleMute()
-	m.refreshVolumeSlider()
+	muted, err := m.amplifier.toggleMute()
+	if err == nil {
+		m.current.muted = muted
+		m.refreshVolumeSlider()
+	}
 }
 
 func (m *mainUI) onVolumeDown() {
-	m.current = m.amplifier.volumeDown()
-	m.refreshVolumeSlider()
+	volume, err := m.amplifier.volumeDown()
+	if err == nil {
+		m.current.volume = volume
+		m.refreshVolumeSlider()
+	}
 }
 
 func (m *mainUI) onVolumeUp() {
-	m.current = m.amplifier.volumeUp()
-	m.refreshVolumeSlider()
+	volume, err := m.amplifier.volumeUp()
+	if err == nil {
+		m.current.volume = volume
+		m.refreshVolumeSlider()
+	}
 }
 
-func (m *mainUI) onInputSelect(input string) {
-	m.current = m.amplifier.setInput(input)
-	m.refreshInput()
+func (m *mainUI) onInputSelect(selected string) {
+	input, err := m.amplifier.setInput(device.Input(m.inputSelector.SelectedIndex() + 1))
+	if err == nil {
+		m.current.input = input
+		m.refreshInput()
+	}
 }
 
 func (m *mainUI) onConnectionInfo() {
@@ -165,6 +185,37 @@ func (m *mainUI) onConnectionInfo() {
 	infoDialog.Show()
 }
 
+func (m *mainUI) load() error {
+	on, err := m.amplifier.GetPower()
+	if err != nil {
+		return err
+	}
+
+	m.current.poweredOn = on
+
+	volume, err := m.amplifier.GetVolume()
+	if err != nil {
+		return err
+	}
+
+	m.current.volume = volume
+
+	muted, err := m.amplifier.GetVolumeMute()
+	if err != nil {
+		return err
+	}
+
+	m.current.muted = muted
+
+	input, err := m.amplifier.GetInput()
+	if err != nil {
+		return err
+	}
+
+	m.current.input = input
+	return nil
+}
+
 func (m *mainUI) connect(host string, model device.Device) error {
 	err := m.amplifier.Connect(host, model)
 	if err != nil {
@@ -178,8 +229,13 @@ func (m *mainUI) connect(host string, model device.Device) error {
 		return err
 	}
 
+	err = m.load()
+	if err != nil {
+		fyne.LogError("Failed to load initial state", err)
+		return err
+	}
+
 	m.inputSelector.Options = inputs
-	m.current = m.amplifier.load()
 	m.host = host
 	m.connectionLabel.SetText("Connected")
 	m.powerToggle.Enable()
@@ -188,12 +244,15 @@ func (m *mainUI) connect(host string, model device.Device) error {
 	m.amplifier.trackChanges(
 		func(refresh refreshed, newState state) {
 			fyne.Do(func() {
-				m.current = newState
-
 				switch refresh {
 				case refreshPower:
+					m.current.poweredOn = newState.poweredOn
 					m.fullRefresh()
-				case refreshVolume, refreshMute:
+				case refreshVolume:
+					m.current.volume = newState.volume
+					m.refreshVolumeSlider()
+				case refreshMute:
+					m.current.muted = newState.muted
 					m.refreshVolumeSlider()
 				case refreshInput:
 					m.refreshInput()

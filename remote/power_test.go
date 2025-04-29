@@ -10,7 +10,7 @@ func TestSetPower(t *testing.T) {
 
 	mock.Fill()
 
-	err := control.SetPower(true)
+	_, err := control.SetPower(true)
 	if err != nil || mock.writeBuf.String() != "-p.1\r" {
 		fmt.Println(err)
 		t.Fail()
@@ -18,7 +18,7 @@ func TestSetPower(t *testing.T) {
 
 	mock.FlushToReader()
 
-	err = control.SetPower(false)
+	_, err = control.SetPower(false)
 	if err != nil || mock.writeBuf.String() != "-p.0\r" {
 		t.Fail()
 	}
@@ -29,7 +29,7 @@ func TestTogglePower(t *testing.T) {
 
 	mock.Fill()
 
-	err := control.TogglePower()
+	_, err := control.TogglePower()
 	if err != nil || mock.writeBuf.String() != "-p.t\r" {
 		t.Fail()
 	}

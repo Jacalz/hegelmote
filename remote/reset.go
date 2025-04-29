@@ -1,12 +1,14 @@
 package remote
 
-import "strconv"
+import (
+	"strconv"
+)
 
 // Minutes defines a number of 0 to 255 minutes.
 type Minutes = uint8
 
 // SetResetDelay sets a timeout, in minutes, for when to reset.
-func (c *Control) SetResetDelay(delay Minutes) error {
+func (c *Control) SetResetDelay(delay Minutes) (Minutes, bool, error) {
 	packet := make([]byte, 0, 7)
 	packet = append(packet, "-r."...)
 	packet = strconv.AppendUint(packet, uint64(delay), 10)
@@ -14,47 +16,57 @@ func (c *Control) SetResetDelay(delay Minutes) error {
 
 	_, err := c.Conn.Write(packet)
 	if err != nil {
-		return err
+		return 0, false, err
 	}
 
-	return c.parseErrorResponse()
+	return c.parseResetResponse()
 }
 
 // StopResetDelay stops the delayed reset from happening.
-func (c *Control) StopResetDelay() error {
+func (c *Control) StopResetDelay() (Minutes, bool, error) {
 	_, err := c.Conn.Write([]byte("-r.~\r"))
 	if err != nil {
-		return err
+		return 0, false, err
 	}
 
-	return c.parseErrorResponse()
+	return c.parseResetResponse()
 }
 
 // GetResetDelay returns the current delay until reset.
 // Returns the delay or a bool indicating if it is stopped or not.
-func (c *Control) GetResetDelay() (uint8, bool, error) {
+func (c *Control) GetResetDelay() (Minutes, bool, error) {
 	_, err := c.Conn.Write([]byte("-r.?\r"))
 	if err != nil {
 		return 0, false, err
 	}
 
-	buf := [7]byte{}
+	return c.parseResetResponse()
+}
+
+func (c *Control) parseResetResponse() (Minutes, bool, error) {
+	buf := [len("-r.255\r")]byte{}
 	n, err := c.Conn.Read(buf[:])
 	if err != nil {
 		return 0, false, err
 	}
 
-	err = parseErrorFromBuffer(buf[:])
-	if err != nil {
-		return 0, false, err
+	if n < 5 {
+		return 0, false, errUnexpectedResponse
 	}
 
-	// Check if reset is stopped or not enabled.
-	if n >= 4 && buf[3] == '~' {
+	if buf[1] == 'e' {
+		return 0, false, errorFromCode(buf[3])
+	}
+
+	if buf[1] != 'r' {
+		return 0, false, errUnexpectedResponse
+	}
+
+	if buf[3] == '~' {
 		return 0, true, nil
 	}
 
-	number := buf[3 : n-1]
-	delay, err := strconv.ParseUint(string(number), 10, 8)
-	return uint8(delay), false, err
+	delay := buf[3 : n-1]
+	number, err := strconv.ParseUint(string(delay), 10, 8)
+	return Minutes(number), false, err
 }

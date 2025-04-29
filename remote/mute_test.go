@@ -7,14 +7,14 @@ func TestSetVolumeMute(t *testing.T) {
 
 	mock.Fill()
 
-	err := control.SetVolumeMute(false)
+	_, err := control.SetVolumeMute(false)
 	if err != nil || mock.writeBuf.String() != "-m.0\r" {
 		t.Fail()
 	}
 
 	mock.FlushToReader()
 
-	err = control.SetVolumeMute(true)
+	_, err = control.SetVolumeMute(true)
 	if err != nil || mock.writeBuf.String() != "-m.1\r" {
 		t.Fail()
 	}
@@ -25,7 +25,7 @@ func TestToggleVolumeMute(t *testing.T) {
 
 	mock.Fill()
 
-	err := control.ToggleVolumeMute()
+	_, err := control.ToggleVolumeMute()
 	if err != nil || mock.writeBuf.String() != "-m.t\r" {
 		t.Fail()
 	}

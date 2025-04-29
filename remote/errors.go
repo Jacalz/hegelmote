@@ -2,39 +2,24 @@ package remote
 
 import "errors"
 
-// The following error codes were reverse engineered by sending incorrect commands.
 var (
-	errMalformedCommand = errors.New("malformed command") // -e.1
-	errUnknownCommand   = errors.New("unknown command")   // -e.2
-	errInvalidParameter = errors.New("invalid parameter") // -e.3
-
-	errUnknownErrorCode = errors.New("received unknown error code")
-	errInvalidVolume    = errors.New("invalid volume")
-	errInputIsZero      = errors.New("source indexing starts at 1")
+	errUnexpectedResponse = errors.New("unexpected response")
+	errInvalidVolume      = errors.New("invalid volume")
+	errInputIsZero        = errors.New("source indexing starts at 1")
 )
 
 // Mapping of error values. Index zero corresponds to error 1 and so on.
-var errorCodes = [3]error{errMalformedCommand, errUnknownCommand, errInvalidParameter}
-
-func (c *Control) parseErrorResponse() error {
-	buf := [7]byte{}
-	_, err := c.Conn.Read(buf[:])
-	if err != nil {
-		return err
-	}
-
-	return parseErrorFromBuffer(buf[:])
+// The following error codes were reverse engineered by sending incorrect commands.
+var errorCodes = [...]error{
+	errors.New("malformed command"), // -e.1
+	errors.New("unknown command"),   // -e.2
+	errors.New("invalid parameter"), // -e.3
 }
 
-func parseErrorFromBuffer(buf []byte) error {
-	if len(buf) < 4 || buf[1] != 'e' {
-		return nil
+func errorFromCode(code byte) error {
+	if code < '1' || code > '3' {
+		return errUnexpectedResponse
 	}
 
-	code := buf[3] - '1'
-	if code > 2 {
-		return errUnknownErrorCode
-	}
-
-	return errorCodes[code]
+	return errorCodes[code-'1']
 }

@@ -6,9 +6,9 @@ import "strconv"
 type Volume = uint8
 
 // SetVolume sets the volume to a value between 0 and 100.
-func (c *Control) SetVolume(volume Volume) error {
+func (c *Control) SetVolume(volume Volume) (Volume, error) {
 	if volume > 100 {
-		return errInvalidVolume
+		return 0, errInvalidVolume
 	}
 
 	packet := make([]byte, 0, 7)
@@ -18,30 +18,30 @@ func (c *Control) SetVolume(volume Volume) error {
 
 	_, err := c.Conn.Write(packet)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return c.parseErrorResponse()
+	return c.parseVolumeResponse()
 }
 
 // VolumeUp increases the volume one step.
-func (c *Control) VolumeUp() error {
+func (c *Control) VolumeUp() (Volume, error) {
 	_, err := c.Conn.Write([]byte("-v.u\r"))
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return c.parseErrorResponse()
+	return c.parseVolumeResponse()
 }
 
 // VolumeDown decreases the volume one step.
-func (c *Control) VolumeDown() error {
+func (c *Control) VolumeDown() (Volume, error) {
 	_, err := c.Conn.Write([]byte("-v.d\r"))
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return c.parseErrorResponse()
+	return c.parseVolumeResponse()
 }
 
 // GetVolume returns the currrently selected volume percentage.
@@ -51,15 +51,26 @@ func (c *Control) GetVolume() (Volume, error) {
 		return 0, err
 	}
 
-	buf := [7]byte{}
+	return c.parseVolumeResponse()
+}
+
+func (c *Control) parseVolumeResponse() (Volume, error) {
+	buf := [len("-m.100\r")]byte{}
 	n, err := c.Conn.Read(buf[:])
 	if err != nil {
 		return 0, err
 	}
 
-	err = parseErrorFromBuffer(buf[:])
-	if err != nil {
-		return 0, err
+	if n < 5 {
+		return 0, errUnexpectedResponse
+	}
+
+	if buf[1] == 'e' {
+		return 0, errorFromCode(buf[3])
+	}
+
+	if buf[1] != 'v' {
+		return 0, errUnexpectedResponse
 	}
 
 	volume := buf[3 : n-1]

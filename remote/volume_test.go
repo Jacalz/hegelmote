@@ -9,19 +9,19 @@ func TestSetVolume(t *testing.T) {
 
 	mock.Fill()
 
-	err := control.SetVolume(101)
+	_, err := control.SetVolume(101)
 	if err == nil {
 		t.Fail()
 	}
 
-	err = control.SetVolume(0)
+	_, err = control.SetVolume(0)
 	if err != nil || mock.writeBuf.String() != "-v.0\r" {
 		t.Fail()
 	}
 
 	mock.FlushToReader()
 
-	err = control.SetVolume(100)
+	_, err = control.SetVolume(100)
 	if err != nil || mock.writeBuf.String() != "-v.100\r" {
 		t.Fail()
 	}
@@ -32,7 +32,7 @@ func TestVolumeUp(t *testing.T) {
 
 	mock.Fill()
 
-	err := control.VolumeUp()
+	_, err := control.VolumeUp()
 	if err != nil || mock.writeBuf.String() != "-v.u\r" {
 		t.Fail()
 	}
@@ -43,7 +43,7 @@ func TestVolumeDown(t *testing.T) {
 
 	mock.Fill()
 
-	err := control.VolumeDown()
+	_, err := control.VolumeDown()
 	if err != nil || mock.writeBuf.String() != "-v.d\r" {
 		t.Fail()
 	}

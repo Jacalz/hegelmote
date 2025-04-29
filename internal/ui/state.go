@@ -30,12 +30,11 @@ type state struct {
 	poweredOn bool
 	volume    remote.Volume
 	muted     bool
-	input     string
+	input     device.Input
 }
 
 type statefulController struct {
 	remote.Control
-	status state
 
 	resetTicker *time.Ticker
 	closing     bool
@@ -81,155 +80,106 @@ func (s *statefulController) sendLock() {
 	s.lock.Lock()
 }
 
-func (s *statefulController) togglePower() state {
+func (s *statefulController) togglePower() (bool, error) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.TogglePower()
-	if err != nil {
-		fyne.LogError("Failed to toggle power", err)
-		return s.status
-	}
-
-	s.status.poweredOn = !s.status.poweredOn
-	return s.status
+	return s.TogglePower()
 }
 
-func (s *statefulController) setVolume(volume remote.Volume) state {
+func (s *statefulController) setVolume(volume remote.Volume) (remote.Volume, error) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.SetVolume(volume)
-	if err != nil {
-		fyne.LogError("Failed to set volume", err)
-		return s.status
-	}
-
-	s.status.volume = volume
-	return s.status
+	return s.SetVolume(volume)
 }
 
-func (s *statefulController) toggleMute() state {
+func (s *statefulController) toggleMute() (bool, error) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.ToggleVolumeMute()
-	if err != nil {
-		fyne.LogError("Failed to toggle mute", err)
-		return s.status
-	}
-
-	s.status.muted = !s.status.muted
-	return s.status
+	return s.ToggleVolumeMute()
 }
 
-func (s *statefulController) volumeDown() state {
+func (s *statefulController) volumeDown() (remote.Volume, error) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.VolumeDown()
-	if err != nil {
-		fyne.LogError("Failed to lower volume", err)
-		return s.status
-	}
-
-	s.status.volume = max(0, s.status.volume-1)
-	return s.status
+	return s.VolumeDown()
 }
 
-func (s *statefulController) volumeUp() state {
+func (s *statefulController) volumeUp() (remote.Volume, error) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.VolumeUp()
-	if err != nil {
-		fyne.LogError("Failed to increase volume", err)
-		return s.status
-	}
-
-	s.status.volume = min(100, s.status.volume+1)
-	return s.status
+	return s.VolumeUp()
 }
 
-func (s *statefulController) setInput(input string) state {
+func (s *statefulController) setInput(input device.Input) (device.Input, error) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.SetInputFromName(input)
-	if err != nil {
-		fyne.LogError("Failed to set input", err)
-		return s.status
-	}
-
-	s.status.input = input
-	return s.status
+	return s.SetInput(input)
 }
 
-func (s *statefulController) reset(delay remote.Minutes) {
+func (s *statefulController) reset(delay remote.Minutes) (remote.Minutes, bool, error) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	err := s.SetResetDelay(delay)
-	if err != nil {
-		fyne.LogError("Failed to send reset", err)
-		return
-	}
+	return s.SetResetDelay(delay)
 }
 
 func (s *statefulController) trackState() (refreshed, state, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
+	status := state{}
+
 	resp, err := s.Read()
 	if err != nil {
 		nerr, ok := err.(net.Error)
 		if ok && nerr.Timeout() {
-			return none, s.status, nil
+			return none, status, nil
 		}
 
 		if s.closing {
-			return closing, s.status, nil
+			return closing, status, nil
 		}
 
-		return none, s.status, err
+		return none, status, err
 	}
 
 	switch resp[1] {
 	case 'p':
-		s.status.poweredOn = resp[3] == '1'
-		return refreshPower, s.status, nil
+		status.poweredOn = resp[3] == '1'
+		return refreshPower, status, nil
 	case 'v':
 		volume, err := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
 		if err != nil {
-			return none, s.status, err
+			return none, status, err
 		}
-		s.status.volume = remote.Volume(volume)
-		return refreshVolume, s.status, nil
+		status.volume = remote.Volume(volume)
+		return refreshVolume, status, nil
 	case 'm':
-		s.status.muted = resp[3] == '1'
-		return refreshMute, s.status, nil
+		status.muted = resp[3] == '1'
+		return refreshMute, status, nil
 	case 'i':
 		input, err := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
 		if err != nil {
-			return none, s.status, err
+			return none, status, err
 		}
-
-		inputName, err := device.NameFromNumber(device.H95, device.Input(input))
-		if err != nil {
-			return none, s.status, err
-		}
-		s.status.input = inputName
-		return refreshInput, s.status, nil
+		status.input = device.Input(input)
+		return refreshInput, status, nil
 	case 'r':
 		if resp[3] == '0' {
-			return reset, s.status, nil
+			return reset, status, nil
 		}
-		return none, s.status, nil
+		return none, status, nil
 	case 'e':
-		return none, s.status, fmt.Errorf("got error code %d from amplifier", resp[3])
+		return none, status, fmt.Errorf("got error code %d from amplifier", resp[3])
 	}
 
-	return none, s.status, fmt.Errorf("unknown command \"%c\" received from amplifier", resp[1])
+	return none, status, fmt.Errorf("unknown command \"%c\" received from amplifier", resp[1])
 }
 
 func (s *statefulController) trackChanges(callback func(refreshed, state)) {
@@ -248,39 +198,4 @@ func (s *statefulController) trackChanges(callback func(refreshed, state)) {
 			}
 		}
 	}()
-}
-
-func (s *statefulController) load() state {
-	on, err := s.GetPower()
-	if err != nil {
-		fyne.LogError("Failed to read power status", err)
-		return s.status
-	}
-
-	s.status.poweredOn = on
-
-	volume, err := s.GetVolume()
-	if err != nil {
-		fyne.LogError("Failed to read volume", err)
-		return s.status
-	}
-
-	s.status.volume = volume
-
-	muted, err := s.GetVolumeMute()
-	if err != nil {
-		fyne.LogError("Failed to read mute status", err)
-		return s.status
-	}
-
-	s.status.muted = muted
-
-	input, err := s.GetInputName()
-	if err != nil {
-		fyne.LogError("Failed to get current input", err)
-		return s.status
-	}
-
-	s.status.input = input
-	return s.status
 }
