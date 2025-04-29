@@ -1,13 +1,9 @@
 package ui
 
 import (
-	"context"
 	"fmt"
 	"image/color"
 	"net/netip"
-	"net/url"
-	"strings"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -15,46 +11,81 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	"github.com/Jacalz/hegelmote/device"
-	upnp "github.com/supersonic-app/go-upnpcast/device"
+	"github.com/Jacalz/hegelmote/internal/upnp"
 )
 
-type discoveredDevice struct {
-	host  string
-	model device.Device
+func (m *mainUI) connect(host string, model device.Device) error {
+	err := m.amplifier.Connect(host, model)
+	if err != nil {
+		fyne.LogError("Failed to connect to amplifier", err)
+		return err
+	}
+
+	inputs, err := device.GetInputNames(model)
+	if err != nil {
+		fyne.LogError("Failed to get input names for model", err)
+		return err
+	}
+
+	err = m.load()
+	if err != nil {
+		fyne.LogError("Failed to load initial state", err)
+		return err
+	}
+
+	m.inputSelector.Options = inputs
+	m.host = host
+	m.connectionLabel.SetText("Connected")
+	m.powerToggle.Enable()
+	m.fullRefresh()
+
+	m.amplifier.trackChanges(
+		func(refresh refreshed, newState state) {
+			fyne.Do(func() {
+				switch refresh {
+				case refreshPower:
+					m.current.poweredOn = newState.poweredOn
+					m.fullRefresh()
+				case refreshVolume:
+					m.current.volume = newState.volume
+					m.refreshVolumeSlider()
+				case refreshMute:
+					m.current.muted = newState.muted
+					m.refreshVolumeSlider()
+				case refreshInput:
+					m.refreshInput()
+				case reset:
+					m.Disconnect()
+				}
+			})
+		},
+	)
+
+	m.amplifier.runResetLoop()
+	return nil
 }
 
-func lookUpDevices() ([]discoveredDevice, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
-	defer cancel()
+func (m *mainUI) Disconnect() {
+	m.powerToggle.Disable()
+	m.amplifier.disconnect()
+	m.connectionLabel.SetText("Disconnected")
+}
 
-	unfiltered, err := upnp.SearchMediaRenderers(ctx, 1)
-	if err != nil {
-		return nil, err
+func (m *mainUI) setUpConnection(prefs fyne.Preferences, w fyne.Window) {
+	host := prefs.String("host")
+	modelID := prefs.IntWithFallback("model", -1)
+	if host != "" && modelID >= 0 && modelID <= int(device.H590) {
+		err := m.connect(host, device.Device(modelID)) // #nosec - Range is checked above!
+		if err == nil {
+			return
+		}
+
+		fyne.LogError("Failed to connect to saved connection", err)
+		prefs.RemoveValue("host")
+		prefs.RemoveValue("model")
 	}
 
-	devices := []discoveredDevice{}
-	for _, found := range unfiltered {
-		if !strings.HasPrefix(found.FriendlyName, "Hegel") {
-			continue
-		}
-
-		rawURL, err := url.Parse(found.URL)
-		if err != nil {
-			continue
-		}
-
-		model, err := device.FromString(found.ModelName)
-		if err != nil {
-			continue
-		}
-
-		devices = append(devices, discoveredDevice{
-			host:  rawURL.Hostname(),
-			model: model,
-		})
-	}
-
-	return devices, nil
+	showConnectionDialog(m, w)
 }
 
 func handleConnection(host string, model device.Device, remember bool, ui *mainUI) error {
@@ -111,8 +142,8 @@ func selectManually(ui *mainUI, w fyne.Window) {
 	fyne.Do(connectionDialog.Show)
 }
 
-func selectFromOneDevice(remote discoveredDevice, ui *mainUI, w fyne.Window) {
-	msg := widget.NewRichTextFromMarkdown(fmt.Sprintf("Found **Hegel %s** at **%s**.", device.SupportedDeviceNames()[remote.model], remote.host))
+func selectFromOneDevice(remote upnp.DiscoveredDevice, ui *mainUI, w fyne.Window) {
+	msg := widget.NewRichTextFromMarkdown(fmt.Sprintf("Found **Hegel %s** at **%s**.", device.SupportedDeviceNames()[remote.Model], remote.Host))
 	remember := &widget.Check{Text: "Remember connection"}
 	content := container.NewVBox(msg, remember)
 	connectionDialog := dialog.NewCustomWithoutButtons("Connect to device", content, w)
@@ -121,7 +152,7 @@ func selectFromOneDevice(remote discoveredDevice, ui *mainUI, w fyne.Window) {
 		Text:       "Connect",
 		Importance: widget.HighImportance,
 		OnTapped: func() {
-			err := handleConnection(remote.host, remote.model, remember.Checked, ui)
+			err := handleConnection(remote.Host, remote.Model, remember.Checked, ui)
 			if err != nil {
 				selectManually(ui, w)
 				return
@@ -133,10 +164,10 @@ func selectFromOneDevice(remote discoveredDevice, ui *mainUI, w fyne.Window) {
 	fyne.Do(connectionDialog.Show)
 }
 
-func selectFromMultipleDevices(remotes []discoveredDevice, ui *mainUI, w fyne.Window) {
+func selectFromMultipleDevices(remotes []upnp.DiscoveredDevice, ui *mainUI, w fyne.Window) {
 	options := make([]string, 0, len(remotes))
 	for _, remote := range remotes {
-		options = append(options, fmt.Sprintf("Hegel %s \u2013 %s", device.SupportedDeviceNames()[remote.model], remote.host))
+		options = append(options, fmt.Sprintf("Hegel %s \u2013 %s", device.SupportedDeviceNames()[remote.Model], remote.Host))
 	}
 
 	msg := &widget.Label{Text: "Multiple devices were discovered:"}
@@ -155,7 +186,7 @@ func selectFromMultipleDevices(remotes []discoveredDevice, ui *mainUI, w fyne.Wi
 			}
 
 			remote := remotes[index]
-			err := handleConnection(remote.host, remote.model, remember.Checked, ui)
+			err := handleConnection(remote.Host, remote.Model, remember.Checked, ui)
 			if err != nil {
 				selectManually(ui, w)
 				return
@@ -181,7 +212,7 @@ func showConnectionDialog(ui *mainUI, w fyne.Window) {
 
 	go func() {
 		defer d.Hide()
-		devices, err := lookUpDevices()
+		devices, err := upnp.LookUpDevices()
 		if err != nil || len(devices) == 0 {
 			fyne.LogError("Failed to search for devices", err)
 			selectManually(ui, w)

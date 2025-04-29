@@ -5,9 +5,7 @@ import (
 	"strconv"
 
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -148,43 +146,6 @@ func (m *mainUI) onInputSelect(selected string) {
 	}
 }
 
-func (m *mainUI) onConnectionInfo() {
-	info := &widget.Form{Items: []*widget.FormItem{
-		{Text: "Address", Widget: &widget.Label{Text: m.host}},
-		{Text: "Model", Widget: &widget.Label{Text: "Hegel " + device.SupportedDeviceNames()[m.amplifier.Model]}},
-		{Text: "Status", Widget: &widget.Label{Text: m.connectionLabel.Text}},
-	}}
-
-	prefs := fyne.CurrentApp().Preferences()
-	var infoDialog *dialog.CustomDialog
-
-	disconnect := &widget.Button{Text: "Disconnect", Icon: theme.CancelIcon(), Importance: widget.LowImportance, OnTapped: func() {
-		infoDialog.Hide()
-		m.Disconnect()
-		showConnectionDialog(m, m.window)
-		m.amplifier.closing = false
-	}}
-
-	forget := &widget.Button{Text: "Forget", Icon: theme.MediaReplayIcon(), Importance: widget.LowImportance}
-	forget.OnTapped = func() {
-		forget.Disable()
-		prefs.RemoveValue("host")
-		prefs.RemoveValue("model")
-	}
-
-	host := prefs.String("host")
-	modelID := prefs.IntWithFallback("model", -1)
-	if host == "" || modelID == -1 {
-		forget.Disable()
-	}
-
-	prop := &canvas.Rectangle{}
-	prop.SetMinSize(fyne.NewSquareSize(theme.Padding()))
-
-	infoDialog = dialog.NewCustom("Connection info", "Dismiss", container.NewVBox(info, container.NewGridWithRows(1, disconnect, forget), prop), m.window)
-	infoDialog.Show()
-}
-
 func (m *mainUI) load() error {
 	on, err := m.amplifier.GetPower()
 	if err != nil {
@@ -214,80 +175,6 @@ func (m *mainUI) load() error {
 
 	m.current.input = input
 	return nil
-}
-
-func (m *mainUI) connect(host string, model device.Device) error {
-	err := m.amplifier.Connect(host, model)
-	if err != nil {
-		fyne.LogError("Failed to connect to amplifier", err)
-		return err
-	}
-
-	inputs, err := device.GetInputNames(model)
-	if err != nil {
-		fyne.LogError("Failed to get input names for model", err)
-		return err
-	}
-
-	err = m.load()
-	if err != nil {
-		fyne.LogError("Failed to load initial state", err)
-		return err
-	}
-
-	m.inputSelector.Options = inputs
-	m.host = host
-	m.connectionLabel.SetText("Connected")
-	m.powerToggle.Enable()
-	m.fullRefresh()
-
-	m.amplifier.trackChanges(
-		func(refresh refreshed, newState state) {
-			fyne.Do(func() {
-				switch refresh {
-				case refreshPower:
-					m.current.poweredOn = newState.poweredOn
-					m.fullRefresh()
-				case refreshVolume:
-					m.current.volume = newState.volume
-					m.refreshVolumeSlider()
-				case refreshMute:
-					m.current.muted = newState.muted
-					m.refreshVolumeSlider()
-				case refreshInput:
-					m.refreshInput()
-				case reset:
-					m.Disconnect()
-				}
-			})
-		},
-	)
-
-	m.amplifier.runResetLoop()
-	return nil
-}
-
-func (m *mainUI) Disconnect() {
-	m.powerToggle.Disable()
-	m.amplifier.disconnect()
-	m.connectionLabel.SetText("Disconnected")
-}
-
-func (m *mainUI) setUpConnection(prefs fyne.Preferences, w fyne.Window) {
-	host := prefs.String("host")
-	modelID := prefs.IntWithFallback("model", -1)
-	if host != "" && modelID >= 0 && modelID <= int(device.H590) {
-		err := m.connect(host, device.Device(modelID)) // #nosec - Range is checked above!
-		if err == nil {
-			return
-		}
-
-		fyne.LogError("Failed to connect to saved connection", err)
-		prefs.RemoveValue("host")
-		prefs.RemoveValue("model")
-	}
-
-	showConnectionDialog(m, w)
 }
 
 // Build sets up and builds the main user interface.
