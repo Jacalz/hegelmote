@@ -14,6 +14,12 @@ import (
 
 const resetInterval = 2 * time.Minute
 
+func newStatefuleController() *statefulController {
+	return &statefulController{
+		resetTicker: time.NewTicker(resetInterval),
+	}
+}
+
 type statefulController struct {
 	remote.Control
 
@@ -44,14 +50,10 @@ func (s *statefulController) disconnect() {
 }
 
 func (s *statefulController) runResetLoop() {
-	if s.resetTicker == nil {
-		s.resetTicker = time.NewTicker(resetInterval)
-	} else {
-		s.resetTicker.Reset(resetInterval)
-	}
+	s.resetTicker.Reset(resetInterval)
+	s.reset(3)
 
 	go func() {
-		s.reset(3)
 		for range s.resetTicker.C {
 			s.reset(3)
 		}

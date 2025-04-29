@@ -16,7 +16,7 @@ import (
 )
 
 type mainUI struct {
-	amplifier statefulController
+	amplifier *statefulController
 	host      string
 	window    fyne.Window
 
@@ -203,7 +203,7 @@ func (m *mainUI) load() error {
 
 // Build sets up and builds the main user interface.
 func Build(a fyne.App, w fyne.Window) (*mainUI, fyne.CanvasObject) {
-	ui := &mainUI{window: w}
+	ui := &mainUI{window: w, amplifier: newStatefuleController()}
 
 	ui.powerToggle = &widget.Button{Icon: img.PowerIcon, Text: "Toggle power", OnTapped: ui.onPowerToggle}
 
