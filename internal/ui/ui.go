@@ -18,8 +18,12 @@ import (
 type mainUI struct {
 	amplifier statefulController
 	host      string
-	current   state
 	window    fyne.Window
+
+	poweredOn bool
+	volume    remote.Volume
+	muted     bool
+	input     device.Input
 
 	// Widgets:
 	powerToggle                      *widget.Button
@@ -34,7 +38,7 @@ type mainUI struct {
 
 func (m *mainUI) refreshPower() {
 	text := "Power off"
-	if !m.current.poweredOn {
+	if !m.poweredOn {
 		text = "Power on"
 	}
 
@@ -44,10 +48,10 @@ func (m *mainUI) refreshPower() {
 func (m *mainUI) refreshVolumeSlider() {
 	m.volumeSlider.OnChangeEnded = nil
 
-	m.volumeSlider.Value = float64(m.current.volume)
+	m.volumeSlider.Value = float64(m.volume)
 	m.volumeSlider.OnChanged(m.volumeSlider.Value)
 
-	if m.current.poweredOn && !m.current.muted {
+	if m.poweredOn && !m.muted {
 		setLabelImportance(m.volumeLabel, widget.MediumImportance)
 		enableAndRefresh(m.volumeSlider)
 		setLabelImportance(m.volumeDisplay, widget.MediumImportance)
@@ -61,16 +65,16 @@ func (m *mainUI) refreshVolumeSlider() {
 }
 
 func (m *mainUI) refreshVolumeButtons() {
-	setEnabled(m.volumeMute, m.current.poweredOn)
-	setEnabled(m.volumeDown, m.current.poweredOn)
-	setEnabled(m.volumeUp, m.current.poweredOn)
+	setEnabled(m.volumeMute, m.poweredOn)
+	setEnabled(m.volumeDown, m.poweredOn)
+	setEnabled(m.volumeUp, m.poweredOn)
 }
 
 func (m *mainUI) refreshInput() {
 	m.inputSelector.OnChanged = nil
-	m.inputSelector.Selected = m.inputSelector.Options[m.current.input-1]
+	m.inputSelector.Selected = m.inputSelector.Options[m.input-1]
 
-	if m.current.poweredOn {
+	if m.poweredOn {
 		setLabelImportance(m.inputLabel, widget.MediumImportance)
 		enableAndRefresh(m.inputSelector)
 	} else {
@@ -92,7 +96,7 @@ func (m *mainUI) onPowerToggle() {
 	on, err := m.amplifier.togglePower()
 	showErrorIfNotNil(err, m.window)
 	if err == nil {
-		m.current.poweredOn = on
+		m.poweredOn = on
 		m.fullRefresh()
 	}
 }
@@ -105,7 +109,7 @@ func (m *mainUI) onVolumeDragEnd(percentage float64) {
 	volume, err := m.amplifier.setVolume(remote.Volume(percentage))
 	showErrorIfNotNil(err, m.window)
 	if err == nil {
-		m.current.volume = volume
+		m.volume = volume
 		m.refreshVolumeSlider()
 	}
 }
@@ -114,7 +118,7 @@ func (m *mainUI) onMute() {
 	muted, err := m.amplifier.toggleMute()
 	showErrorIfNotNil(err, m.window)
 	if err == nil {
-		m.current.muted = muted
+		m.muted = muted
 		m.refreshVolumeSlider()
 	}
 }
@@ -123,7 +127,7 @@ func (m *mainUI) onVolumeDown() {
 	volume, err := m.amplifier.volumeDown()
 	showErrorIfNotNil(err, m.window)
 	if err == nil {
-		m.current.volume = volume
+		m.volume = volume
 		m.refreshVolumeSlider()
 	}
 }
@@ -132,7 +136,7 @@ func (m *mainUI) onVolumeUp() {
 	volume, err := m.amplifier.volumeUp()
 	showErrorIfNotNil(err, m.window)
 	if err == nil {
-		m.current.volume = volume
+		m.volume = volume
 		m.refreshVolumeSlider()
 	}
 }
@@ -141,9 +145,29 @@ func (m *mainUI) onInputSelect(selected string) {
 	input, err := m.amplifier.setInput(device.Input(m.inputSelector.SelectedIndex() + 1))
 	showErrorIfNotNil(err, m.window)
 	if err == nil {
-		m.current.input = input
+		m.input = input
 		m.refreshInput()
 	}
+}
+
+func (m *mainUI) onPowerChanged(poweredOn bool) {
+	m.poweredOn = poweredOn
+	m.fullRefresh()
+}
+
+func (m *mainUI) onVolumeChanged(volume remote.Volume) {
+	m.volume = volume
+	m.refreshVolumeSlider()
+}
+
+func (m *mainUI) onMuteChanged(muted bool) {
+	m.muted = muted
+	m.refreshVolumeSlider()
+}
+
+func (m *mainUI) onInputChanged(input device.Input) {
+	m.input = input
+	m.refreshInput()
 }
 
 func (m *mainUI) load() error {
@@ -152,28 +176,28 @@ func (m *mainUI) load() error {
 		return err
 	}
 
-	m.current.poweredOn = on
+	m.poweredOn = on
 
 	volume, err := m.amplifier.GetVolume()
 	if err != nil {
 		return err
 	}
 
-	m.current.volume = volume
+	m.volume = volume
 
 	muted, err := m.amplifier.GetVolumeMute()
 	if err != nil {
 		return err
 	}
 
-	m.current.muted = muted
+	m.muted = muted
 
 	input, err := m.amplifier.GetInput()
 	if err != nil {
 		return err
 	}
 
-	m.current.input = input
+	m.input = input
 	return nil
 }
 
@@ -197,6 +221,12 @@ func Build(a fyne.App, w fyne.Window) (*mainUI, fyne.CanvasObject) {
 	ui.connectionInfoButton = &widget.Button{Icon: theme.InfoIcon(), Importance: widget.LowImportance, OnTapped: ui.onConnectionInfo}
 
 	ui.setUpConnection(a.Preferences(), w)
+
+	ui.amplifier.onPowerChange = ui.onPowerChanged
+	ui.amplifier.onVolumeChange = ui.onVolumeChanged
+	ui.amplifier.onMuteChange = ui.onMuteChanged
+	ui.amplifier.onInputChange = ui.onInputChanged
+	ui.amplifier.onReset = ui.Disconnect
 
 	return ui, container.NewVBox(
 		ui.powerToggle,

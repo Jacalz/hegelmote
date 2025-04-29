@@ -14,27 +14,14 @@ import (
 
 const resetInterval = 2 * time.Minute
 
-type refreshed uint8
-
-const (
-	none refreshed = iota
-	closing
-	refreshPower
-	refreshVolume
-	refreshMute
-	refreshInput
-	reset
-)
-
-type state struct {
-	poweredOn bool
-	volume    remote.Volume
-	muted     bool
-	input     device.Input
-}
-
 type statefulController struct {
 	remote.Control
+
+	onPowerChange  func(poweredOn bool)
+	onVolumeChange func(volume remote.Volume)
+	onMuteChange   func(muted bool)
+	onInputChange  func(input device.Input)
+	onReset        func()
 
 	resetTicker *time.Ticker
 	closing     bool
@@ -129,72 +116,65 @@ func (s *statefulController) reset(delay remote.Minutes) (remote.Delay, error) {
 	return s.SetResetDelay(delay)
 }
 
-func (s *statefulController) trackState() (refreshed, state, error) {
+func (s *statefulController) trackState() error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-
-	status := state{}
 
 	resp, err := s.Read()
 	if err != nil {
 		nerr, ok := err.(net.Error)
 		if ok && nerr.Timeout() {
-			return none, status, nil
+			return nil
 		}
 
 		if s.closing {
-			return closing, status, nil
+			return nil
 		}
 
-		return none, status, err
+		return err
 	}
 
 	switch resp[1] {
 	case 'p':
-		status.poweredOn = resp[3] == '1'
-		return refreshPower, status, nil
+		s.onPowerChange(resp[3] == '1')
 	case 'v':
 		volume, err := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
 		if err != nil {
-			return none, status, err
+			return err
 		}
-		status.volume = remote.Volume(volume)
-		return refreshVolume, status, nil
+		s.onVolumeChange(remote.Volume(volume))
 	case 'm':
-		status.muted = resp[3] == '1'
-		return refreshMute, status, nil
+		s.onMuteChange(resp[3] == '1')
 	case 'i':
 		input, err := strconv.ParseUint(string(resp[3:len(resp)-1]), 10, 8)
 		if err != nil {
-			return none, status, err
+			return err
 		}
-		status.input = device.Input(input)
-		return refreshInput, status, nil
+		s.onInputChange(device.Input(input))
 	case 'r':
 		if resp[3] == '0' {
-			return reset, status, nil
+			s.onReset()
 		}
-		return none, status, nil
 	case 'e':
-		return none, status, fmt.Errorf("got error code %d from amplifier", resp[3])
+		return fmt.Errorf("got error code %d from amplifier", resp[3])
+	default:
+		return fmt.Errorf("unknown command \"%c\" received from amplifier", resp[1])
 	}
 
-	return none, status, fmt.Errorf("unknown command \"%c\" received from amplifier", resp[1])
+	return nil
 }
 
-func (s *statefulController) trackChanges(callback func(refreshed, state)) {
+func (s *statefulController) trackChanges() {
 	go func() {
 		for {
-			refresh, status, err := s.trackState()
+			err := s.trackState()
 			if err != nil {
 				fyne.LogError("Error on tracking state change from amplifier", err)
 				return
 			}
 
-			if refresh == closing {
+			if s.closing {
 				return
-			} else if refresh != none {
-				callback(refresh, status)
 			}
 		}
 	}()

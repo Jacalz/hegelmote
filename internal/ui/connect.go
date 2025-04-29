@@ -39,28 +39,7 @@ func (m *mainUI) connect(host string, model device.Device) error {
 	m.powerToggle.Enable()
 	m.fullRefresh()
 
-	m.amplifier.trackChanges(
-		func(refresh refreshed, newState state) {
-			fyne.Do(func() {
-				switch refresh {
-				case refreshPower:
-					m.current.poweredOn = newState.poweredOn
-					m.fullRefresh()
-				case refreshVolume:
-					m.current.volume = newState.volume
-					m.refreshVolumeSlider()
-				case refreshMute:
-					m.current.muted = newState.muted
-					m.refreshVolumeSlider()
-				case refreshInput:
-					m.refreshInput()
-				case reset:
-					m.Disconnect()
-				}
-			})
-		},
-	)
-
+	m.amplifier.trackChanges()
 	m.amplifier.runResetLoop()
 	return nil
 }
