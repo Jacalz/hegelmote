@@ -12,24 +12,20 @@ func TestSetInput(t *testing.T) {
 	mock.Fill("-i.0\r")
 
 	_, err := control.SetInput(0)
-	if err == nil {
-		t.Fail()
-	}
+	assert.Error(t, err)
 
 	mock.Fill("-i.1\r")
 
 	_, err = control.SetInput(1)
-	if err != nil || mock.writeBuf.String() != "-i.1\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "-i.1\r", mock.writeBuf.String())
 
 	// Fill reader but clear writer.
 	mock.FlushToReader()
 
 	_, err = control.SetInput(8)
-	if err != nil || mock.writeBuf.String() != "-i.8\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "-i.8\r", mock.writeBuf.String())
 }
 
 func TestGetInput(t *testing.T) {
@@ -37,22 +33,23 @@ func TestGetInput(t *testing.T) {
 
 	mock.Fill("-i.1\r")
 
-	control.SetInput(1)
+	_, err := control.SetInput(1)
+	assert.NoError(t, err)
 	mock.FlushToReader()
 
 	number, err := control.GetInput()
-	if err != nil || number != 1 || mock.writeBuf.String() != "-i.?\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, 1, number)
+	assert.Equal(t, "-i.?\r", mock.writeBuf.String())
 
-	mock.FlushToReader()
-	control.SetInput(8)
+	mock.Fill("-i.8\r")
+	_, err = control.SetInput(8)
+	assert.NoError(t, err)
 	mock.FlushToReader()
 
 	number, err = control.GetInput()
-	if err != nil || number != 8 {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, 8, number)
 }
 
 func TestSetInputFromName(t *testing.T) {
@@ -90,27 +87,25 @@ func TestGetInputName(t *testing.T) {
 	control, mock := newControlMock()
 
 	mock.Fill("-i.1\r")
-	control.SetInput(1)
+	_, err := control.SetInput(1)
+	assert.NoError(t, err)
 	mock.FlushToReader()
 
 	name, err := control.GetInputName()
-	if err != nil || name != "Analog 1" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "Analog 1", name)
 
 	mock.Close()
 
 	mock.Fill("-i.8\r")
-	control.SetInput(8)
+	_, err = control.SetInput(8)
+	assert.NoError(t, err)
 	mock.FlushToReader()
 
 	name, err = control.GetInputName()
-	if err != nil || name != "Network" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "Network", name)
 
 	_, err = control.GetInputName()
-	if err == nil {
-		t.Fail()
-	}
+	assert.Error(t, err)
 }

@@ -1,8 +1,9 @@
 package remote
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/alecthomas/assert/v2"
 )
 
 func TestSetPower(t *testing.T) {
@@ -11,17 +12,14 @@ func TestSetPower(t *testing.T) {
 	mock.Fill("-p.1\r")
 
 	_, err := control.SetPower(true)
-	if err != nil || mock.writeBuf.String() != "-p.1\r" {
-		fmt.Println(err)
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "-p.1\r", mock.writeBuf.String())
 
 	mock.Fill("-p.0\r")
 
 	_, err = control.SetPower(false)
-	if err != nil || mock.writeBuf.String() != "-p.0\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "-p.0\r", mock.writeBuf.String())
 }
 
 func TestTogglePower(t *testing.T) {
@@ -30,28 +28,32 @@ func TestTogglePower(t *testing.T) {
 	mock.Fill("-p.0\r")
 
 	_, err := control.TogglePower()
-	if err != nil || mock.writeBuf.String() != "-p.t\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "-p.t\r", mock.writeBuf.String())
 }
 
 func TestGetPower(t *testing.T) {
 	control, mock := newControlMock()
 
-	control.SetPower(false)
+	mock.Fill("-p.0\r")
+
+	_, err := control.SetPower(false)
+	assert.NoError(t, err)
 	mock.FlushToReader()
 
 	on, err := control.GetPower()
-	if err != nil || on || mock.writeBuf.String() != "-p.?\r" {
-		t.Fail()
-	}
-	mock.Close()
+	assert.NoError(t, err)
+	assert.False(t, on)
+	assert.Equal(t, "-p.?\r", mock.writeBuf.String())
 
-	control.SetPower(true)
+	mock.Fill("-p.1\r")
+
+	_, err = control.SetPower(true)
+	assert.NoError(t, err)
 	mock.FlushToReader()
 
 	on, err = control.GetPower()
-	if err != nil || !on || mock.writeBuf.String() != "-p.?\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.True(t, on)
+	assert.Equal(t, "-p.?\r", mock.writeBuf.String())
 }

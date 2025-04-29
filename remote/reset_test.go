@@ -2,6 +2,8 @@ package remote
 
 import (
 	"testing"
+
+	"github.com/alecthomas/assert/v2"
 )
 
 func TestSetResetDelay(t *testing.T) {
@@ -10,16 +12,14 @@ func TestSetResetDelay(t *testing.T) {
 	mock.Fill("-r.0\r")
 
 	_, err := control.SetResetDelay(0)
-	if err != nil || mock.writeBuf.String() != "-r.0\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "-r.0\r", mock.writeBuf.String())
 
 	mock.Fill("-r.255\r")
 
 	_, err = control.SetResetDelay(255)
-	if err != nil || mock.writeBuf.String() != "-r.255\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "-r.255\r", mock.writeBuf.String())
 }
 
 func TestStopResetDelay(t *testing.T) {
@@ -28,31 +28,34 @@ func TestStopResetDelay(t *testing.T) {
 	mock.Fill("-r.0\r")
 
 	_, err := control.StopResetDelay()
-	if err != nil || mock.writeBuf.String() != "-r.~\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "-r.~\r", mock.writeBuf.String())
 }
 
 func TestGetResetDelay(t *testing.T) {
 	control, mock := newControlMock()
 
-	// Set state to stopped.
-	control.StopResetDelay()
+	mock.Fill("-r.~\r")
+
+	_, err := control.StopResetDelay()
+	assert.NoError(t, err)
 	mock.FlushToReader()
 
 	delay, err := control.GetResetDelay()
-	if err != nil || delay.Minutes != 0 || !delay.Stopped || mock.writeBuf.String() != "-r.?\r" {
-		t.Fail()
-	}
-	mock.Close()
+	assert.NoError(t, err)
+	assert.Zero(t, delay.Minutes)
+	assert.True(t, delay.Stopped)
+	assert.Equal(t, "-r.?\r", mock.writeBuf.String())
 
-	// Set state delay to 255.
-	control.SetResetDelay(255)
+	mock.Fill("-r.255\r")
+
+	_, err = control.SetResetDelay(255)
+	assert.NoError(t, err)
 	mock.FlushToReader()
 
 	delay, err = control.GetResetDelay()
-	if err != nil || delay.Minutes != 255 || delay.Stopped || mock.writeBuf.String() != "-r.?\r" {
-		t.Fail()
-	}
-	mock.Close()
+	assert.NoError(t, err)
+	assert.Equal(t, 255, delay.Minutes)
+	assert.False(t, delay.Stopped)
+	assert.Equal(t, "-r.?\r", mock.writeBuf.String())
 }

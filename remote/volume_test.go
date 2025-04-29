@@ -2,6 +2,8 @@ package remote
 
 import (
 	"testing"
+
+	"github.com/alecthomas/assert/v2"
 )
 
 func TestSetVolume(t *testing.T) {
@@ -10,21 +12,23 @@ func TestSetVolume(t *testing.T) {
 	mock.Fill("-v.0\r")
 
 	_, err := control.SetVolume(101)
-	if err == nil {
-		t.Fail()
-	}
+	assert.Error(t, err)
 
 	_, err = control.SetVolume(0)
-	if err != nil || mock.writeBuf.String() != "-v.0\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "-v.0\r", mock.writeBuf.String())
+
+	mock.Fill("-v.50\r")
+
+	_, err = control.SetVolume(50)
+	assert.NoError(t, err)
+	assert.Equal(t, "-v.50\r", mock.writeBuf.String())
 
 	mock.Fill("-v.100\r")
 
 	_, err = control.SetVolume(100)
-	if err != nil || mock.writeBuf.String() != "-v.100\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "-v.100\r", mock.writeBuf.String())
 }
 
 func TestVolumeUp(t *testing.T) {
@@ -33,9 +37,8 @@ func TestVolumeUp(t *testing.T) {
 	mock.Fill("-v.1\r")
 
 	_, err := control.VolumeUp()
-	if err != nil || mock.writeBuf.String() != "-v.u\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "-v.u\r", mock.writeBuf.String())
 }
 
 func TestVolumeDown(t *testing.T) {
@@ -44,9 +47,8 @@ func TestVolumeDown(t *testing.T) {
 	mock.Fill("-v.0\r")
 
 	_, err := control.VolumeDown()
-	if err != nil || mock.writeBuf.String() != "-v.d\r" {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, "-v.d\r", mock.writeBuf.String())
 }
 
 func TestGetVolume(t *testing.T) {
@@ -54,20 +56,20 @@ func TestGetVolume(t *testing.T) {
 
 	mock.Fill("-v.0\r")
 
-	control.SetVolume(0)
+	_, err := control.SetVolume(0)
+	assert.NoError(t, err)
 	mock.FlushToReader()
 
 	volume, err := control.GetVolume()
-	if err != nil || volume != 0 {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Zero(t, volume)
 
-	mock.FlushToReader()
-	control.SetVolume(100)
+	mock.Fill("-v.100\r")
+	_, err = control.SetVolume(100)
+	assert.NoError(t, err)
 	mock.FlushToReader()
 
 	volume, err = control.GetVolume()
-	if err != nil || volume != 100 {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, 100, volume)
 }
