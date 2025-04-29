@@ -122,7 +122,7 @@ func (s *statefulController) setInput(input device.Input) (device.Input, error) 
 	return s.SetInput(input)
 }
 
-func (s *statefulController) reset(delay remote.Minutes) (remote.Minutes, bool, error) {
+func (s *statefulController) reset(delay remote.Minutes) (remote.Delay, error) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
