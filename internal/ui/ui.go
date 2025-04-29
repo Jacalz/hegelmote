@@ -36,7 +36,7 @@ type mainUI struct {
 
 func (m *mainUI) refreshPower() {
 	text := "Power off"
-	if m.current.poweredOn {
+	if !m.current.poweredOn {
 		text = "Power on"
 	}
 
@@ -63,15 +63,9 @@ func (m *mainUI) refreshVolumeSlider() {
 }
 
 func (m *mainUI) refreshVolumeButtons() {
-	if m.current.poweredOn {
-		m.volumeMute.Enable()
-		m.volumeDown.Enable()
-		m.volumeUp.Enable()
-	} else {
-		m.volumeMute.Disable()
-		m.volumeDown.Disable()
-		m.volumeUp.Disable()
-	}
+	setEnabled(m.volumeMute, m.current.poweredOn)
+	setEnabled(m.volumeDown, m.current.poweredOn)
+	setEnabled(m.volumeUp, m.current.poweredOn)
 }
 
 func (m *mainUI) refreshInput() {
@@ -323,32 +317,4 @@ func Build(a fyne.App, w fyne.Window) (*mainUI, fyne.CanvasObject) {
 		layout.NewSpacer(),
 		container.NewBorder(nil, nil, nil, ui.connectionInfoButton, ui.connectionLabel),
 	)
-}
-
-type disableableWidget interface {
-	fyne.Widget
-	fyne.Disableable
-}
-
-func enableAndRefresh(wid disableableWidget) {
-	if !wid.Disabled() {
-		wid.Refresh()
-	}
-	wid.Enable()
-}
-
-func disableAndRefresh(wid disableableWidget) {
-	if wid.Disabled() {
-		wid.Refresh()
-	}
-	wid.Disable()
-}
-
-func setLabelImportance(label *widget.Label, importance widget.Importance) {
-	if label.Importance == importance {
-		return
-	}
-
-	label.Importance = importance
-	label.Refresh()
 }
