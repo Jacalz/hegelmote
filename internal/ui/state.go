@@ -51,11 +51,17 @@ func (s *statefulController) disconnect() {
 
 func (s *statefulController) runResetLoop() {
 	s.resetTicker.Reset(resetInterval)
-	s.reset(3)
+	_, err := s.reset(3)
+	if err != nil {
+		fyne.LogError("Failed to send reset timeout update", err)
+	}
 
 	go func() {
 		for range s.resetTicker.C {
-			s.reset(3)
+			_, err := s.reset(3)
+			if err != nil {
+				fyne.LogError("Failed to send reset timeout update", err)
+			}
 		}
 	}()
 }

@@ -142,7 +142,7 @@ func (m *mainUI) onVolumeUp() {
 }
 
 func (m *mainUI) onInputSelect(selected string) {
-	input, err := m.amplifier.setInput(device.Input(m.inputSelector.SelectedIndex() + 1))
+	input, err := m.amplifier.setInput(device.Input(m.inputSelector.SelectedIndex() + 1)) // #nosec
 	showErrorIfNotNil(err, m.window)
 	if err == nil {
 		m.input = input
