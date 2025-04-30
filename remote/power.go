@@ -36,10 +36,5 @@ func (c *Control) GetPower() (bool, error) {
 }
 
 func (c *Control) parsePowerResponse() (bool, error) {
-	buf, err := c.read('p')
-	if err != nil {
-		return false, err
-	}
-
-	return buf[3] == '1', nil
+	return c.parseOnOffValue('p')
 }

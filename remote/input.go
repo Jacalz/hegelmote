@@ -59,10 +59,5 @@ func (c *Control) GetInput() (device.Input, error) {
 }
 
 func (c *Control) parseInputResponse() (device.Input, error) {
-	buf, err := c.read('i')
-	if err != nil {
-		return 0, err
-	}
-
-	return parseUint8FromBuf(buf)
+	return c.parseNumberFromResponse('i')
 }

@@ -69,6 +69,24 @@ func (c *Control) read(expectedCommand byte) ([]byte, error) {
 	return buf, nil
 }
 
+func (c *Control) parseOnOffValue(command byte) (bool, error) {
+	buf, err := c.read(command)
+	if err != nil {
+		return false, err
+	}
+
+	return buf[3] == '1', nil
+}
+
+func (c *Control) parseNumberFromResponse(command byte) (uint8, error) {
+	buf, err := c.read(command)
+	if err != nil {
+		return 0, err
+	}
+
+	return parseUint8FromBuf(buf)
+}
+
 func parseUint8FromBuf(buf []byte) (uint8, error) {
 	str := buf[3 : len(buf)-1]
 	number, err := strconv.ParseUint(string(str), 10, 8)

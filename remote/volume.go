@@ -55,10 +55,5 @@ func (c *Control) GetVolume() (Volume, error) {
 }
 
 func (c *Control) parseVolumeResponse() (Volume, error) {
-	buf, err := c.read('v')
-	if err != nil {
-		return 0, err
-	}
-
-	return parseUint8FromBuf(buf)
+	return c.parseNumberFromResponse('v')
 }

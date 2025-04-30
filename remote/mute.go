@@ -36,10 +36,5 @@ func (c *Control) GetVolumeMute() (bool, error) {
 }
 
 func (c *Control) parseMuteResponse() (bool, error) {
-	buf, err := c.read('m')
-	if err != nil {
-		return false, err
-	}
-
-	return buf[3] == '1', nil
+	return c.parseOnOffValue('m')
 }
