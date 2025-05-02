@@ -45,13 +45,13 @@ type ControlWithListener struct {
 	OnError        func(err error)
 
 	resetTicker *time.Ticker
-	closing     atomic.Bool
+	connected   atomic.Bool
 	lock        sync.Mutex
 }
 
 // Connect tries to connect to the amplifier.
 func (s *ControlWithListener) Connect(host string, model device.Device) error {
-	s.closing.Store(false)
+	s.connected.Store(true)
 	s.resetTicker.Reset(resetInterval)
 
 	defer s.runChangeListener()
@@ -62,7 +62,7 @@ func (s *ControlWithListener) Connect(host string, model device.Device) error {
 
 // Disconnect disconnects from the amplifier.
 func (s *ControlWithListener) Disconnect() error {
-	s.closing.Store(true)
+	s.connected.Store(false)
 
 	s.sendLock()
 	defer s.lock.Unlock()
@@ -144,11 +144,7 @@ func (s *ControlWithListener) trackState() error {
 	resp, err := s.read()
 	if err != nil {
 		nerr, ok := err.(net.Error)
-		if ok && nerr.Timeout() {
-			return nil
-		}
-
-		if s.closing.Load() {
+		if ok && nerr.Timeout() || !s.connected.Load() {
 			return nil
 		}
 
@@ -194,7 +190,7 @@ func (s *ControlWithListener) runChangeListener() {
 				return
 			}
 
-			if s.closing.Load() {
+			if !s.connected.Load() {
 				return
 			}
 		}
