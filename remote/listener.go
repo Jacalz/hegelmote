@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Jacalz/hegelmote/device"
@@ -44,13 +45,13 @@ type ControlWithListener struct {
 	OnError        func(err error)
 
 	resetTicker *time.Ticker
-	closing     bool
+	closing     atomic.Bool
 	lock        sync.Mutex
 }
 
 // Connect tries to connect to the amplifier.
 func (s *ControlWithListener) Connect(host string, model device.Device) error {
-	s.closing = false
+	s.closing.Store(false)
 	s.resetTicker.Reset(resetInterval)
 
 	defer s.runChangeListener()
@@ -61,10 +62,11 @@ func (s *ControlWithListener) Connect(host string, model device.Device) error {
 
 // Disconnect disconnects from the amplifier.
 func (s *ControlWithListener) Disconnect() error {
+	s.closing.Store(true)
+
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	s.closing = true
 	s.resetTicker.Stop()
 
 	return s.Control.Disconnect()
@@ -146,7 +148,7 @@ func (s *ControlWithListener) trackState() error {
 			return nil
 		}
 
-		if s.closing {
+		if s.closing.Load() {
 			return nil
 		}
 
@@ -192,7 +194,7 @@ func (s *ControlWithListener) runChangeListener() {
 				return
 			}
 
-			if s.closing {
+			if s.closing.Load() {
 				return
 			}
 		}
