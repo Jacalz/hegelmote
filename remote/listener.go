@@ -16,7 +16,8 @@ const resetInterval = 2 * time.Minute
 func NewControlWithListener(
 	onPower func(bool), onVolume func(Volume),
 	onMute func(bool), onInput func(device.Input),
-	OnReset func(), OnError func(error)) *ControlWithListener {
+	OnReset func(), OnError func(error),
+) *ControlWithListener {
 	return &ControlWithListener{
 		resetTicker:    time.NewTicker(resetInterval),
 		OnPowerChange:  onPower,
@@ -133,6 +134,7 @@ func (s *ControlWithListener) sendLock() {
 
 	s.lock.Lock()
 }
+
 func (s *ControlWithListener) trackState() error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
