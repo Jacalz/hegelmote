@@ -38,15 +38,15 @@ func (m *mainUI) connect(host string, model device.Device) error {
 	m.connectionLabel.SetText("Connected")
 	m.powerToggle.Enable()
 	m.fullRefresh()
-
-	m.amplifier.trackChanges()
-	m.amplifier.runResetLoop()
 	return nil
 }
 
 func (m *mainUI) Disconnect() {
 	m.powerToggle.Disable()
-	m.amplifier.disconnect()
+	err := m.amplifier.Disconnect()
+	if err != nil {
+		fyne.LogError("Error on disconnecting", err)
+	}
 	m.connectionLabel.SetText("Disconnected")
 }
 

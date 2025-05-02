@@ -47,6 +47,6 @@ func (t *mockConnection) FlushToReader() {
 func newControlMock() (*Control, *mockConnection) {
 	control := &Control{Model: device.H95}
 	adapter := &mockConnection{}
-	control.Conn = adapter
+	control.conn = adapter
 	return control, adapter
 }

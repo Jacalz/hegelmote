@@ -7,7 +7,7 @@ func (c *Control) SetVolumeMute(mute bool) (bool, error) {
 		packet[3] = '1'
 	}
 
-	_, err := c.Conn.Write(packet)
+	_, err := c.conn.Write(packet)
 	if err != nil {
 		return false, err
 	}
@@ -17,7 +17,7 @@ func (c *Control) SetVolumeMute(mute bool) (bool, error) {
 
 // ToggleVolumeMute toggles the muting of volume.
 func (c *Control) ToggleVolumeMute() (bool, error) {
-	_, err := c.Conn.Write([]byte("-m.t\r"))
+	_, err := c.conn.Write([]byte("-m.t\r"))
 	if err != nil {
 		return false, err
 	}
@@ -27,7 +27,7 @@ func (c *Control) ToggleVolumeMute() (bool, error) {
 
 // GetVolumeMute returns true if the device is muted.
 func (c *Control) GetVolumeMute() (bool, error) {
-	_, err := c.Conn.Write([]byte("-m.?\r"))
+	_, err := c.conn.Write([]byte("-m.?\r"))
 	if err != nil {
 		return false, err
 	}

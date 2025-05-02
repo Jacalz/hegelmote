@@ -6,6 +6,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -16,7 +17,7 @@ import (
 )
 
 type mainUI struct {
-	amplifier *statefulController
+	amplifier *remote.ControlWithListener
 	host      string
 	window    fyne.Window
 
@@ -93,7 +94,7 @@ func (m *mainUI) fullRefresh() {
 }
 
 func (m *mainUI) onPowerToggle() {
-	on, err := m.amplifier.togglePower()
+	on, err := m.amplifier.TogglePower()
 	showErrorIfNotNil(err, m.window)
 	if err == nil {
 		m.poweredOn = on
@@ -106,7 +107,7 @@ func (m *mainUI) onVolumeDrag(percentage float64) {
 }
 
 func (m *mainUI) onVolumeDragEnd(percentage float64) {
-	volume, err := m.amplifier.setVolume(remote.Volume(percentage))
+	volume, err := m.amplifier.SetVolume(remote.Volume(percentage))
 	showErrorIfNotNil(err, m.window)
 	if err == nil {
 		m.volume = volume
@@ -115,7 +116,7 @@ func (m *mainUI) onVolumeDragEnd(percentage float64) {
 }
 
 func (m *mainUI) onMute() {
-	muted, err := m.amplifier.toggleMute()
+	muted, err := m.amplifier.ToggleMute()
 	showErrorIfNotNil(err, m.window)
 	if err == nil {
 		m.muted = muted
@@ -124,7 +125,7 @@ func (m *mainUI) onMute() {
 }
 
 func (m *mainUI) onVolumeDown() {
-	volume, err := m.amplifier.volumeDown()
+	volume, err := m.amplifier.VolumeDown()
 	showErrorIfNotNil(err, m.window)
 	if err == nil {
 		m.volume = volume
@@ -133,7 +134,7 @@ func (m *mainUI) onVolumeDown() {
 }
 
 func (m *mainUI) onVolumeUp() {
-	volume, err := m.amplifier.volumeUp()
+	volume, err := m.amplifier.VolumeUp()
 	showErrorIfNotNil(err, m.window)
 	if err == nil {
 		m.volume = volume
@@ -142,7 +143,7 @@ func (m *mainUI) onVolumeUp() {
 }
 
 func (m *mainUI) onInputSelect(selected string) {
-	input, err := m.amplifier.setInput(device.Input(m.inputSelector.SelectedIndex() + 1)) // #nosec
+	input, err := m.amplifier.SetInput(device.Input(m.inputSelector.SelectedIndex() + 1)) // #nosec
 	showErrorIfNotNil(err, m.window)
 	if err == nil {
 		m.input = input
@@ -168,6 +169,11 @@ func (m *mainUI) onMuteChanged(muted bool) {
 func (m *mainUI) onInputChanged(input device.Input) {
 	m.input = input
 	m.refreshInput()
+}
+
+func (m *mainUI) onError(err error) {
+	fyne.LogError("Received error from state tracker", err)
+	dialog.ShowError(err, m.window)
 }
 
 func (m *mainUI) load() error {
@@ -203,7 +209,15 @@ func (m *mainUI) load() error {
 
 // Build sets up and builds the main user interface.
 func Build(a fyne.App, w fyne.Window) (*mainUI, fyne.CanvasObject) {
-	ui := &mainUI{window: w, amplifier: newStatefuleController()}
+	ui := &mainUI{window: w}
+	ui.amplifier = remote.NewControlWithListener(
+		ui.onPowerChanged,
+		ui.onVolumeChanged,
+		ui.onMuteChanged,
+		ui.onInputChanged,
+		ui.Disconnect,
+		ui.onError,
+	)
 
 	ui.powerToggle = &widget.Button{Icon: img.PowerIcon, Text: "Toggle power", OnTapped: ui.onPowerToggle}
 
@@ -221,12 +235,6 @@ func Build(a fyne.App, w fyne.Window) (*mainUI, fyne.CanvasObject) {
 	ui.connectionInfoButton = &widget.Button{Icon: theme.InfoIcon(), Importance: widget.LowImportance, OnTapped: ui.onConnectionInfo}
 
 	ui.setUpConnection(a.Preferences(), w)
-
-	ui.amplifier.onPowerChange = ui.onPowerChanged
-	ui.amplifier.onVolumeChange = ui.onVolumeChanged
-	ui.amplifier.onMuteChange = ui.onMuteChanged
-	ui.amplifier.onInputChange = ui.onInputChanged
-	ui.amplifier.onReset = ui.Disconnect
 
 	return ui, container.NewVBox(
 		ui.powerToggle,

@@ -7,7 +7,7 @@ func (c *Control) SetPower(on bool) (bool, error) {
 		packet[3] = '1'
 	}
 
-	_, err := c.Conn.Write(packet)
+	_, err := c.conn.Write(packet)
 	if err != nil {
 		return false, err
 	}
@@ -17,7 +17,7 @@ func (c *Control) SetPower(on bool) (bool, error) {
 
 // TogglePower toggles the power on and off.
 func (c *Control) TogglePower() (bool, error) {
-	_, err := c.Conn.Write([]byte("-p.t\r"))
+	_, err := c.conn.Write([]byte("-p.t\r"))
 	if err != nil {
 		return false, err
 	}
@@ -27,7 +27,7 @@ func (c *Control) TogglePower() (bool, error) {
 
 // GetPower returns the current power status.
 func (c *Control) GetPower() (bool, error) {
-	_, err := c.Conn.Write([]byte("-p.?\r"))
+	_, err := c.conn.Write([]byte("-p.?\r"))
 	if err != nil {
 		return false, err
 	}

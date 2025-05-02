@@ -11,7 +11,7 @@ import (
 type Control struct {
 	Model device.Device
 
-	Conn net.Conn
+	conn net.Conn
 }
 
 // Connect connects to the supplied host address. A port should not be specified.
@@ -21,26 +21,24 @@ func (c *Control) Connect(host string, model device.Device) error {
 		return err
 	}
 
-	c.Conn = conn
+	c.conn = conn
 	c.Model = model
 	return nil
 }
 
 // Disconnect closes the remote connection.
 func (c *Control) Disconnect() error {
-	if c.Conn == nil {
+	if c.conn == nil {
 		return nil
 	}
 
-	return c.Conn.Close()
+	return c.conn.Close()
 }
 
-// Read provides access to reading out the raw data from the command buffer.
-// This can be used to listen for changes sent by the amplifier.
-func (c *Control) Read() ([]byte, error) {
+func (c *Control) read() ([]byte, error) {
 	buf := [len("-v.100\r")]byte{}
 
-	n, err := c.Conn.Read(buf[:])
+	n, err := c.conn.Read(buf[:])
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +54,8 @@ func (c *Control) Read() ([]byte, error) {
 	return buf[:n], nil
 }
 
-func (c *Control) read(expectedCommand byte) ([]byte, error) {
-	buf, err := c.Read()
+func (c *Control) readCommand(expectedCommand byte) ([]byte, error) {
+	buf, err := c.read()
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +68,7 @@ func (c *Control) read(expectedCommand byte) ([]byte, error) {
 }
 
 func (c *Control) parseOnOffValue(command byte) (bool, error) {
-	buf, err := c.read(command)
+	buf, err := c.readCommand(command)
 	if err != nil {
 		return false, err
 	}
@@ -79,7 +77,7 @@ func (c *Control) parseOnOffValue(command byte) (bool, error) {
 }
 
 func (c *Control) parseNumberFromResponse(command byte) (uint8, error) {
-	buf, err := c.read(command)
+	buf, err := c.readCommand(command)
 	if err != nil {
 		return 0, err
 	}
@@ -88,7 +86,7 @@ func (c *Control) parseNumberFromResponse(command byte) (uint8, error) {
 }
 
 func parseUint8FromBuf(buf []byte) (uint8, error) {
-	str := buf[3 : len(buf)-1]
-	number, err := strconv.ParseUint(string(str), 10, 8)
+	str := string(buf[3 : len(buf)-1])
+	number, err := strconv.ParseUint(str, 10, 8)
 	return uint8(number), err
 }

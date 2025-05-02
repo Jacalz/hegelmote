@@ -20,7 +20,7 @@ func (c *Control) SetResetDelay(delay Minutes) (Delay, error) {
 	packet = strconv.AppendUint(packet, uint64(delay), 10)
 	packet = append(packet, '\r')
 
-	_, err := c.Conn.Write(packet)
+	_, err := c.conn.Write(packet)
 	if err != nil {
 		return Delay{}, err
 	}
@@ -30,7 +30,7 @@ func (c *Control) SetResetDelay(delay Minutes) (Delay, error) {
 
 // StopResetDelay stops the delayed reset from happening.
 func (c *Control) StopResetDelay() (Delay, error) {
-	_, err := c.Conn.Write([]byte("-r.~\r"))
+	_, err := c.conn.Write([]byte("-r.~\r"))
 	if err != nil {
 		return Delay{}, err
 	}
@@ -41,7 +41,7 @@ func (c *Control) StopResetDelay() (Delay, error) {
 // GetResetDelay returns the current delay until reset.
 // Returns the delay or a bool indicating if it is stopped or not.
 func (c *Control) GetResetDelay() (Delay, error) {
-	_, err := c.Conn.Write([]byte("-r.?\r"))
+	_, err := c.conn.Write([]byte("-r.?\r"))
 	if err != nil {
 		return Delay{}, err
 	}
@@ -50,7 +50,7 @@ func (c *Control) GetResetDelay() (Delay, error) {
 }
 
 func (c *Control) parseResetResponse() (Delay, error) {
-	buf, err := c.read('r')
+	buf, err := c.readCommand('r')
 	if err != nil {
 		return Delay{}, err
 	}

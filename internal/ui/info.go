@@ -24,7 +24,6 @@ func (m *mainUI) onConnectionInfo() {
 		infoDialog.Hide()
 		m.Disconnect()
 		showConnectionDialog(m, m.window)
-		m.amplifier.closing = false
 	}}
 
 	forget := &widget.Button{Text: "Forget", Icon: theme.MediaReplayIcon(), Importance: widget.LowImportance}
