@@ -113,7 +113,7 @@ func (s *ControlWithListener) ToggleVolumeMute() (bool, error) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	return s.control.GetVolumeMute()
+	return s.control.ToggleVolumeMute()
 }
 
 // GetVolumeMute returns the curren state of volume being muted or not.
