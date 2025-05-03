@@ -116,7 +116,7 @@ func (m *mainUI) onVolumeDragEnd(percentage float64) {
 }
 
 func (m *mainUI) onMute() {
-	muted, err := m.amplifier.ToggleMute()
+	muted, err := m.amplifier.ToggleVolumeMute()
 	showErrorIfNotNil(err, m.window)
 	if err == nil {
 		m.muted = muted

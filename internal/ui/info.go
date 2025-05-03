@@ -13,7 +13,7 @@ import (
 func (m *mainUI) onConnectionInfo() {
 	info := &widget.Form{Items: []*widget.FormItem{
 		{Text: "Address", Widget: &widget.Label{Text: m.host}},
-		{Text: "Model", Widget: &widget.Label{Text: "Hegel " + device.SupportedDeviceNames()[m.amplifier.Model]}},
+		{Text: "Model", Widget: &widget.Label{Text: "Hegel " + device.SupportedDeviceNames()[m.amplifier.GetModel()]}},
 		{Text: "Status", Widget: &widget.Label{Text: m.connectionLabel.Text}},
 	}}
 

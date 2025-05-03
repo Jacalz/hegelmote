@@ -35,7 +35,7 @@ func NewControlWithListener(
 // a fixed delay to allow reconnecting in case of error.
 // This data type is thread safe.
 type ControlWithListener struct {
-	Control
+	control Control
 
 	OnPowerChange  func(poweredOn bool)
 	OnVolumeChange func(volume Volume)
@@ -49,7 +49,12 @@ type ControlWithListener struct {
 	lock        sync.Mutex
 }
 
-// Connect tries to connect to the amplifier.
+// GetModel returns the model of the currently connected amplifier.
+func (s *ControlWithListener) GetModel() device.Device {
+	return s.control.Model
+}
+
+// Connect connects to the amplifier and starts the listener.
 func (s *ControlWithListener) Connect(host string, model device.Device) error {
 	s.connected.Store(true)
 	s.resetTicker.Reset(resetInterval)
@@ -57,27 +62,66 @@ func (s *ControlWithListener) Connect(host string, model device.Device) error {
 	defer s.runChangeListener()
 	defer s.runResetLoop()
 
-	return s.Control.Connect(host, model)
+	return s.control.Connect(host, model)
 }
 
-// Disconnect disconnects from the amplifier.
+// Disconnect disconnects from the amplifier and stops the listener.
 func (s *ControlWithListener) Disconnect() error {
 	s.connected.Store(false)
+	s.resetTicker.Stop()
 
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	s.resetTicker.Stop()
-
-	return s.Control.Disconnect()
+	return s.control.Disconnect()
 }
 
-// TogglePower sends a toggle command to the amplifier.
+// SetPower sets the amplifier to be on or off depending on the passed bool value.
+func (s *ControlWithListener) SetPower(on bool) (bool, error) {
+	s.sendLock()
+	defer s.lock.Unlock()
+
+	return s.control.SetPower(on)
+}
+
+// TogglePower toggles between on or off given the current state.
 func (s *ControlWithListener) TogglePower() (bool, error) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	return s.Control.TogglePower()
+	return s.control.TogglePower()
+}
+
+// GetPower returns the current power status.
+func (s *ControlWithListener) GetPower() (bool, error) {
+	s.sendLock()
+	defer s.lock.Unlock()
+
+	return s.control.GetPower()
+}
+
+// SetVolumeMute sets the amplifier to be muted or unmuted given the passed bool value.
+func (s *ControlWithListener) SetVolumeMute(muted bool) (bool, error) {
+	s.sendLock()
+	defer s.lock.Unlock()
+
+	return s.control.SetVolumeMute(muted)
+}
+
+// ToggleVolumeMute toggles the volume between muted and unmuted given current state.
+func (s *ControlWithListener) ToggleVolumeMute() (bool, error) {
+	s.sendLock()
+	defer s.lock.Unlock()
+
+	return s.control.GetVolumeMute()
+}
+
+// GetVolumeMute returns the curren state of volume being muted or not.
+func (s *ControlWithListener) GetVolumeMute() (bool, error) {
+	s.sendLock()
+	defer s.lock.Unlock()
+
+	return s.control.GetVolumeMute()
 }
 
 // SetVolume sets the volume to the given value.
@@ -85,15 +129,7 @@ func (s *ControlWithListener) SetVolume(volume Volume) (Volume, error) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	return s.Control.SetVolume(volume)
-}
-
-// ToggleMute toggles the mute value.
-func (s *ControlWithListener) ToggleMute() (bool, error) {
-	s.sendLock()
-	defer s.lock.Unlock()
-
-	return s.Control.ToggleVolumeMute()
+	return s.control.SetVolume(volume)
 }
 
 // VolumeDown decreases the volume one step.
@@ -101,7 +137,7 @@ func (s *ControlWithListener) VolumeDown() (Volume, error) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	return s.Control.VolumeDown()
+	return s.control.VolumeDown()
 }
 
 // VolumeUp increases the volume one step.
@@ -109,7 +145,15 @@ func (s *ControlWithListener) VolumeUp() (Volume, error) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	return s.Control.VolumeUp()
+	return s.control.VolumeUp()
+}
+
+// GetVolume returns the current volume value.
+func (s *ControlWithListener) GetVolume() (Volume, error) {
+	s.sendLock()
+	defer s.lock.Unlock()
+
+	return s.control.GetVolume()
 }
 
 // SetInput sets the input to the given value.
@@ -117,21 +161,45 @@ func (s *ControlWithListener) SetInput(input device.Input) (device.Input, error)
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	return s.Control.SetInput(input)
+	return s.control.SetInput(input)
 }
 
-// SetResetDelay sends a reset delay to the amplifier.
+// GetInput returns the currently selected input.
+func (s *ControlWithListener) GetInput() (device.Input, error) {
+	s.sendLock()
+	defer s.lock.Unlock()
+
+	return s.control.GetInput()
+}
+
+// SetResetDelay sets a timeout in minutes for when to reset the connection.
 func (s *ControlWithListener) SetResetDelay(delay Minutes) (Delay, error) {
 	s.sendLock()
 	defer s.lock.Unlock()
 
-	return s.Control.SetResetDelay(delay)
+	return s.control.SetResetDelay(delay)
+}
+
+// StopResetDelay stops the reset delay from ticking down.
+func (s *ControlWithListener) StopResetDelay() (Delay, error) {
+	s.sendLock()
+	defer s.lock.Unlock()
+
+	return s.control.StopResetDelay()
+}
+
+// GetResetDelay returns the current delay for reset.
+func (s *ControlWithListener) GetResetDelay() (Delay, error) {
+	s.sendLock()
+	defer s.lock.Unlock()
+
+	return s.control.GetResetDelay()
 }
 
 // sendLock unblocks the reading state tracker, locks and reverts back to blocking read.
 func (s *ControlWithListener) sendLock() {
-	if s.conn != nil && s.conn.SetReadDeadline(time.Now()) == nil {
-		defer s.conn.SetReadDeadline(time.Time{})
+	if conn := s.control.conn; conn != nil && conn.SetReadDeadline(time.Now()) == nil {
+		defer conn.SetReadDeadline(time.Time{})
 	}
 
 	s.lock.Lock()
@@ -141,7 +209,7 @@ func (s *ControlWithListener) trackState() error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	resp, err := s.read()
+	resp, err := s.control.read()
 	if err != nil {
 		nerr, ok := err.(net.Error)
 		if ok && nerr.Timeout() || !s.connected.Load() {
