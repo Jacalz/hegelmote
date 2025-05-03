@@ -9,7 +9,7 @@ import (
 // SetInputFromName tells the amplifier to switch to the corresponding source name.
 // The input name should match one for the given device type.
 func (c *Control) SetInputFromName(name string) (device.Input, error) {
-	number, err := device.InputFromName(c.Model, name)
+	number, err := device.InputFromName(c.deviceType, name)
 	if err != nil {
 		return 0, err
 	}
@@ -45,7 +45,7 @@ func (c *Control) GetInputName() (string, error) {
 		return "", err
 	}
 
-	return device.NameFromNumber(c.Model, input)
+	return device.NameFromNumber(c.deviceType, input)
 }
 
 // GetInput returns the currently selected source number.

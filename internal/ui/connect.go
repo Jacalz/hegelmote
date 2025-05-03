@@ -14,7 +14,7 @@ import (
 	"github.com/Jacalz/hegelmote/internal/upnp"
 )
 
-func (m *mainUI) connect(host string, model device.Device) error {
+func (m *mainUI) connect(host string, model device.Type) error {
 	err := m.amplifier.Connect(host, model)
 	if err != nil {
 		fyne.LogError("Failed to connect to amplifier", err)
@@ -54,7 +54,7 @@ func (m *mainUI) setUpConnection(prefs fyne.Preferences, w fyne.Window) {
 	host := prefs.String("host")
 	modelID := prefs.IntWithFallback("model", -1)
 	if host != "" && modelID >= 0 && modelID <= int(device.H590) {
-		err := m.connect(host, device.Device(modelID)) // #nosec - Range is checked above!
+		err := m.connect(host, device.Type(modelID)) // #nosec - Range is checked above!
 		if err == nil {
 			return
 		}
@@ -67,7 +67,7 @@ func (m *mainUI) setUpConnection(prefs fyne.Preferences, w fyne.Window) {
 	showConnectionDialog(m, w)
 }
 
-func handleConnection(host string, model device.Device, remember bool, ui *mainUI) error {
+func handleConnection(host string, model device.Type, remember bool, ui *mainUI) error {
 	err := ui.connect(host, model)
 	if err != nil {
 		fyne.LogError("Failed to connect", err)
@@ -84,7 +84,7 @@ func handleConnection(host string, model device.Device, remember bool, ui *mainU
 
 func selectManually(ui *mainUI, w fyne.Window) {
 	hostname := &widget.Entry{PlaceHolder: "IP Address (no port)"}
-	models := &widget.Select{PlaceHolder: "Device type", Options: device.SupportedDeviceNames()}
+	models := &widget.Select{PlaceHolder: "Device type", Options: device.SupportedTypeNames()}
 	remember := &widget.Check{Text: "Remember connection"}
 	content := container.NewVBox(hostname, models, remember)
 
@@ -122,7 +122,7 @@ func selectManually(ui *mainUI, w fyne.Window) {
 }
 
 func selectFromOneDevice(remote upnp.DiscoveredDevice, ui *mainUI, w fyne.Window) {
-	msg := widget.NewRichTextFromMarkdown(fmt.Sprintf("Found **Hegel %s** at **%s**.", device.SupportedDeviceNames()[remote.Model], remote.Host))
+	msg := widget.NewRichTextFromMarkdown(fmt.Sprintf("Found **Hegel %s** at **%s**.", device.SupportedTypeNames()[remote.Model], remote.Host))
 	remember := &widget.Check{Text: "Remember connection"}
 	content := container.NewVBox(msg, remember)
 	connectionDialog := dialog.NewCustomWithoutButtons("Connect to device", content, w)
@@ -146,7 +146,7 @@ func selectFromOneDevice(remote upnp.DiscoveredDevice, ui *mainUI, w fyne.Window
 func selectFromMultipleDevices(remotes []upnp.DiscoveredDevice, ui *mainUI, w fyne.Window) {
 	options := make([]string, 0, len(remotes))
 	for _, remote := range remotes {
-		options = append(options, fmt.Sprintf("Hegel %s \u2013 %s", device.SupportedDeviceNames()[remote.Model], remote.Host))
+		options = append(options, fmt.Sprintf("Hegel %s \u2013 %s", device.SupportedTypeNames()[remote.Model], remote.Host))
 	}
 
 	msg := &widget.Label{Text: "Multiple devices were discovered:"}

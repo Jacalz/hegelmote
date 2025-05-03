@@ -9,20 +9,20 @@ import (
 
 // Control implements remote IP control of supported Hegel amplifiers.
 type Control struct {
-	Model device.Device
+	deviceType device.Type
 
 	conn net.Conn
 }
 
 // Connect connects to the supplied host address. A port should not be specified.
-func (c *Control) Connect(host string, model device.Device) error {
+func (c *Control) Connect(host string, model device.Type) error {
 	conn, err := net.Dial("tcp", host+":50001")
 	if err != nil {
 		return err
 	}
 
 	c.conn = conn
-	c.Model = model
+	c.deviceType = model
 	return nil
 }
 
@@ -33,6 +33,11 @@ func (c *Control) Disconnect() error {
 	}
 
 	return c.conn.Close()
+}
+
+// GetDeviceType returns the device type of the current connection.
+func (c *Control) GetDeviceType() device.Type {
+	return c.deviceType
 }
 
 func (c *Control) read() ([]byte, error) {

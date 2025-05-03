@@ -13,7 +13,7 @@ import (
 // DiscoveredDevice specifies a discovered Hegel amplifier on the network.
 type DiscoveredDevice struct {
 	Host  string
-	Model device.Device
+	Model device.Type
 }
 
 // LookUpDevices searches the local network for discoverable devices.

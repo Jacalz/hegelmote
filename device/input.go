@@ -17,8 +17,8 @@ var (
 )
 
 // GetInputs returns the list of input names for the given device.
-func GetInputNames(device Device) ([]string, error) {
-	if device > H590 {
+func GetInputNames(device Type) ([]string, error) {
+	if device >= unsupported {
 		return nil, errInvalidDevice
 	}
 
@@ -27,8 +27,8 @@ func GetInputNames(device Device) ([]string, error) {
 
 // InputFromName returns the corresponding input number for the input name.
 // NOTE: The output is indexed from 1.
-func InputFromName(device Device, input string) (Input, error) {
-	if device > H590 {
+func InputFromName(device Type, input string) (Input, error) {
+	if device >= unsupported {
 		return 0, errInvalidDevice
 	}
 
@@ -38,19 +38,19 @@ func InputFromName(device Device, input string) (Input, error) {
 		return 0, errInvalidInput
 	}
 
-	return Input(number) + 1, nil // #nosec: Known input!
+	return Input(number) + 1, nil // #nosec
 }
 
 // NameFromNumber returns the corresponding input name for the input number.
-func NameFromNumber(device Device, number Input) (string, error) {
-	if device > H590 {
+func NameFromNumber(device Type, input Input) (string, error) {
+	if device >= unsupported {
 		return "", errInvalidDevice
 	}
 
 	inputs := deviceInputs[device]
-	if int(number) > len(inputs) {
+	if int(input) > len(inputs) {
 		return "", errInvalidInput
 	}
 
-	return inputs[number-1], nil
+	return inputs[input-1], nil
 }

@@ -49,13 +49,13 @@ type ControlWithListener struct {
 	lock        sync.Mutex
 }
 
-// GetModel returns the model of the currently connected amplifier.
-func (s *ControlWithListener) GetModel() device.Device {
-	return s.control.Model
+// GetDeviceType returns the device type of the currently connected amplifier.
+func (s *ControlWithListener) GetDeviceType() device.Type {
+	return s.control.deviceType
 }
 
 // Connect connects to the amplifier and starts the listener.
-func (s *ControlWithListener) Connect(host string, model device.Device) error {
+func (s *ControlWithListener) Connect(host string, model device.Type) error {
 	s.connected.Store(true)
 	s.resetTicker.Reset(resetInterval)
 
