@@ -107,13 +107,8 @@ func selectManually(ui *mainUI, w fyne.Window) {
 	connect.Disable()
 	hostname.OnChanged = func(_ string) {
 		_, errIP := netip.ParseAddr(hostname.Text)
-		hasModel := models.SelectedIndex() != -1
-		if errIP == nil && hasModel {
-			connect.Enable()
-			return
-		}
-
-		connect.Disable()
+		hasDeviceType := models.SelectedIndex() != -1
+		setEnabled(connect, errIP == nil && hasDeviceType)
 	}
 	models.OnChanged = hostname.OnChanged
 
@@ -134,7 +129,6 @@ func selectFromOneDevice(remote upnp.DiscoveredDevice, ui *mainUI, w fyne.Window
 			err := handleConnection(remote.Host, remote.Model, remember.Checked, ui)
 			if err != nil {
 				selectManually(ui, w)
-				return
 			}
 			connectionDialog.Hide()
 		},
@@ -168,7 +162,6 @@ func selectFromMultipleDevices(remotes []upnp.DiscoveredDevice, ui *mainUI, w fy
 			err := handleConnection(remote.Host, remote.Model, remember.Checked, ui)
 			if err != nil {
 				selectManually(ui, w)
-				return
 			}
 			connectionDialog.Hide()
 		},
