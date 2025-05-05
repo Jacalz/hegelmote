@@ -3,11 +3,13 @@ package main
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"github.com/Jacalz/hegelmote/assets/img"
 	"github.com/Jacalz/hegelmote/internal/ui"
 )
 
 func main() {
 	a := app.NewWithID("io.github.jacalz.hegelmote")
+	a.SetIcon(img.AppIcon)
 	w := a.NewWindow("Hegelmote")
 
 	ui, content := ui.Build(a, w)
