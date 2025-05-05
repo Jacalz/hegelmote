@@ -1,8 +1,8 @@
 package remote
 
 import (
+	"fmt"
 	"net"
-	"strconv"
 
 	"github.com/Jacalz/hegelmote/device"
 )
@@ -91,7 +91,19 @@ func (c *Control) parseNumberFromResponse(command byte) (uint8, error) {
 }
 
 func parseUint8FromBuf(buf []byte) (uint8, error) {
-	str := string(buf[3 : len(buf)-1])
-	number, err := strconv.ParseUint(str, 10, 8)
-	return uint8(number), err
+	number := uint16(0)
+	for i := 3; i < len(buf)-1 && buf[i] != '\r'; i++ {
+		char := buf[i]
+		if char < '0' || char > '9' {
+			return 0, fmt.Errorf("invalid uint8 value: %s", string(buf))
+		}
+
+		number = number*10 + uint16(char-'0')
+	}
+
+	if number > 255 {
+		return 0, fmt.Errorf("value %d does not fit in uint8", number)
+	}
+
+	return uint8(number), nil
 }
