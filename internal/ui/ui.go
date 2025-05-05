@@ -103,7 +103,7 @@ func (m *mainUI) onPowerToggle() {
 }
 
 func (m *mainUI) onVolumeDrag(percentage float64) {
-	m.volumeDisplay.SetText(strconv.FormatUint(uint64(percentage), 10) + "%")
+	m.volumeDisplay.SetText(strconv.FormatUint(uint64(percentage), 10))
 }
 
 func (m *mainUI) onVolumeDragEnd(percentage float64) {
@@ -222,7 +222,7 @@ func Build(a fyne.App, w fyne.Window) (*mainUI, fyne.CanvasObject) {
 	ui.powerToggle = &widget.Button{Icon: img.PowerIcon, Text: "Toggle power", OnTapped: ui.onPowerToggle}
 
 	ui.volumeLabel = &widget.Label{Text: "Change volume:", TextStyle: fyne.TextStyle{Bold: true}}
-	ui.volumeDisplay = &widget.Label{Text: "0%"}
+	ui.volumeDisplay = &widget.Label{Text: "0", Alignment: fyne.TextAlignCenter}
 	ui.volumeSlider = &widget.Slider{Min: 0, Max: 100, Step: 1, OnChanged: ui.onVolumeDrag, OnChangeEnded: ui.onVolumeDragEnd}
 	ui.volumeMute = &widget.Button{Icon: theme.VolumeMuteIcon(), OnTapped: ui.onMute}
 	ui.volumeDown = &widget.Button{Icon: theme.VolumeDownIcon(), OnTapped: ui.onVolumeDown}
@@ -240,7 +240,7 @@ func Build(a fyne.App, w fyne.Window) (*mainUI, fyne.CanvasObject) {
 		ui.powerToggle,
 		widget.NewSeparator(),
 		ui.volumeLabel,
-		container.NewBorder(nil, nil, nil, ui.volumeDisplay, ui.volumeSlider),
+		newVolumeContainer(ui.volumeSlider, ui.volumeDisplay),
 		container.NewGridWithColumns(3, ui.volumeMute, ui.volumeDown, ui.volumeUp),
 		widget.NewSeparator(),
 		ui.inputLabel,
@@ -248,4 +248,26 @@ func Build(a fyne.App, w fyne.Window) (*mainUI, fyne.CanvasObject) {
 		layout.NewSpacer(),
 		container.NewBorder(nil, nil, nil, ui.connectionInfoButton, ui.connectionLabel),
 	)
+}
+
+var _ fyne.Layout = (*volumeLayout)(nil)
+
+func newVolumeContainer(slider *widget.Slider, display *widget.Label) *fyne.Container {
+	return container.New(&volumeLayout{border: layout.NewBorderLayout(nil, nil, nil, display)}, slider, display)
+}
+
+type volumeLayout struct {
+	border fyne.Layout
+}
+
+func (v *volumeLayout) Layout(objects []fyne.CanvasObject, size fyne.Size) {
+	halfpad := theme.InnerPadding() / 2
+	v.border.Layout(objects, size)
+	objects[0].Resize(objects[0].Size().AddWidthHeight(halfpad, 0))
+	objects[1].Move(objects[1].Position().SubtractXY(halfpad, 0))
+}
+
+func (v *volumeLayout) MinSize(objects []fyne.CanvasObject) fyne.Size {
+	m1, m2 := objects[0].MinSize(), objects[1].MinSize()
+	return fyne.NewSize(max(m1.Width, m2.Width), max(m1.Height, m2.Height))
 }
