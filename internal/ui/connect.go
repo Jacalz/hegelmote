@@ -116,7 +116,7 @@ func (m *mainUI) showManualConnectionDialog() {
 	models.OnChanged = hostname.OnChanged
 
 	connectionDialog.SetButtons([]fyne.CanvasObject{connect})
-	fyne.Do(connectionDialog.Show)
+	connectionDialog.Show()
 }
 
 func (m *mainUI) showConnectOneDialog(remote upnp.DiscoveredDevice) {
@@ -137,7 +137,7 @@ func (m *mainUI) showConnectOneDialog(remote upnp.DiscoveredDevice) {
 		},
 	}
 	connectionDialog.SetButtons([]fyne.CanvasObject{connect})
-	fyne.Do(connectionDialog.Show)
+	connectionDialog.Show()
 }
 
 func (m *mainUI) showConnectMultipleDialog(remotes []upnp.DiscoveredDevice) {
@@ -172,7 +172,7 @@ func (m *mainUI) showConnectMultipleDialog(remotes []upnp.DiscoveredDevice) {
 	connect.Disable()
 	selection.OnChanged = func(_ string) { connect.Enable() }
 	connectionDialog.SetButtons([]fyne.CanvasObject{connect})
-	fyne.Do(connectionDialog.Show)
+	connectionDialog.Show()
 }
 
 func (m *mainUI) showConnectionDialog() {
@@ -186,20 +186,28 @@ func (m *mainUI) showConnectionDialog() {
 	d.Show()
 
 	go func() {
-		defer d.Hide()
 		devices, err := upnp.LookUpDevices()
 		if err != nil || len(devices) == 0 {
 			fyne.LogError("Failed to search for devices", err)
-			m.showManualConnectionDialog()
+			fyne.Do(func() {
+				m.showManualConnectionDialog()
+				d.Hide()
+			})
 			return
 		}
 
 		if len(devices) > 1 {
-			m.showConnectMultipleDialog(devices)
+			fyne.Do(func() {
+				d.Hide()
+				m.showConnectMultipleDialog(devices)
+			})
 			return
 		}
 
-		m.showConnectOneDialog(devices[0])
+		fyne.Do(func() {
+			d.Hide()
+			m.showConnectOneDialog(devices[0])
+		})
 	}()
 }
 
