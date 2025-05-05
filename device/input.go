@@ -9,30 +9,39 @@ import (
 // Note that this is indexed from one and not zero.
 type Input = uint8
 
-var deviceInputs = [...][]string{InputsRöst, InputsH95, InputsH120, InputsH190, InputsH390, InputsH590}
-
 var (
 	errInvalidDevice = errors.New("invalid device type")
-	errInvalidInput  = errors.New("input not on device")
+	errInvalidInput  = errors.New("unsupported input for device")
 )
 
 // GetInputs returns the list of input names for the given device.
 func GetInputNames(device Type) ([]string, error) {
-	if device >= unsupported {
-		return nil, errInvalidDevice
+	switch device {
+	case Röst:
+		return InputsRöst[:], nil
+	case H95:
+		return InputsH95[:], nil
+	case H120:
+		return InputsH120[:], nil
+	case H190:
+		return InputsH190[:], nil
+	case H390:
+		return InputsH390[:], nil
+	case H590:
+		return InputsH590[:], nil
 	}
 
-	return deviceInputs[device], nil
+	return nil, errInvalidDevice
 }
 
 // InputFromName returns the corresponding input number for the input name.
 // NOTE: The output is indexed from 1.
 func InputFromName(device Type, input string) (Input, error) {
-	if device >= unsupported {
-		return 0, errInvalidDevice
+	inputs, err := GetInputNames(device)
+	if err != nil {
+		return 0, err
 	}
 
-	inputs := deviceInputs[device]
 	number := slices.Index(inputs, input)
 	if number == -1 {
 		return 0, errInvalidInput
@@ -43,11 +52,11 @@ func InputFromName(device Type, input string) (Input, error) {
 
 // NameFromNumber returns the corresponding input name for the input number.
 func NameFromNumber(device Type, input Input) (string, error) {
-	if device >= unsupported {
-		return "", errInvalidDevice
+	inputs, err := GetInputNames(device)
+	if err != nil {
+		return "", err
 	}
 
-	inputs := deviceInputs[device]
 	if int(input) > len(inputs) {
 		return "", errInvalidInput
 	}

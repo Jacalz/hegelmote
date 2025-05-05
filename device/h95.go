@@ -1,7 +1,7 @@
 package device
 
 // Input names for H95.
-var InputsH95 = []string{
+var InputsH95 = [...]string{
 	"Analog 1",
 	"Analog 2",
 	"Coaxial",

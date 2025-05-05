@@ -1,7 +1,7 @@
 package device
 
 // Input names for H590.
-var InputsH590 = []string{
+var InputsH590 = [...]string{
 	"XLR 1",
 	"XLR 2",
 	"Analog 1",
