@@ -60,7 +60,6 @@ func (m *mainUI) setUpConnection(prefs fyne.Preferences, w fyne.Window) {
 			return
 		}
 
-		fyne.LogError("Failed to connect to saved connection", err)
 		prefs.RemoveValue("host")
 		prefs.RemoveValue("model")
 	}

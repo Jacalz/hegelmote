@@ -56,13 +56,17 @@ func (s *ControlWithListener) GetDeviceType() device.Type {
 
 // Connect connects to the amplifier and starts the listener.
 func (s *ControlWithListener) Connect(host string, model device.Type) error {
+	err := s.control.Connect(host, model)
+	if err != nil {
+		return err
+	}
+
 	s.connected.Store(true)
 	s.resetTicker.Reset(resetInterval)
 
-	defer s.runChangeListener()
-	defer s.runResetLoop()
-
-	return s.control.Connect(host, model)
+	s.runChangeListener()
+	s.runResetLoop()
+	return nil
 }
 
 // Disconnect disconnects from the amplifier and stops the listener.

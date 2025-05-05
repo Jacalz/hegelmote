@@ -1,8 +1,10 @@
 package remote
 
 import (
+	"context"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/Jacalz/hegelmote/device"
 )
@@ -16,7 +18,11 @@ type Control struct {
 
 // Connect connects to the supplied host address. A port should not be specified.
 func (c *Control) Connect(host string, model device.Type) error {
-	conn, err := net.Dial("tcp", host+":50001")
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	d := net.Dialer{}
+	conn, err := d.DialContext(ctx, "tcp", host+":50001")
 	if err != nil {
 		return err
 	}
