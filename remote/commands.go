@@ -49,7 +49,7 @@ func (c *Control) read() ([]byte, error) {
 	}
 
 	if n < 5 {
-		return nil, errUnexpectedResponse
+		return nil, fmt.Errorf("unexpected response: %q", string(buf[:]))
 	}
 
 	if buf[1] == 'e' {
@@ -66,7 +66,7 @@ func (c *Control) readCommand(expectedCommand byte) ([]byte, error) {
 	}
 
 	if buf[1] != expectedCommand {
-		return nil, errUnexpectedResponse
+		return nil, fmt.Errorf("unexpected response: %q", string(buf))
 	}
 
 	return buf, nil

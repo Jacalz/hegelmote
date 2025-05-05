@@ -1,12 +1,11 @@
 package remote
 
-import "errors"
-
-var (
-	errUnexpectedResponse = errors.New("unexpected response")
-	errInvalidVolume      = errors.New("invalid volume")
-	errInputIsZero        = errors.New("source indexing starts at 1")
+import (
+	"errors"
+	"fmt"
 )
+
+var errInputIsZero = errors.New("input 0 is not a valid source")
 
 // Mapping of error values. Index zero corresponds to error 1 and so on.
 // The following error codes were reverse engineered by sending incorrect commands.
@@ -18,7 +17,7 @@ var errorCodes = [...]error{
 
 func errorFromCode(code byte) error {
 	if code < '1' || code > '3' {
-		return errUnexpectedResponse
+		return fmt.Errorf("unexpected error code: %d", code)
 	}
 
 	return errorCodes[code-'1']

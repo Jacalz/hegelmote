@@ -27,5 +27,5 @@ func TestReturnedErrors(t *testing.T) {
 	mock.Fill("-e.0\r")
 
 	_, err = control.SetPower(true)
-	assert.Equal(t, errUnexpectedResponse, err)
+	assert.Error(t, err)
 }
