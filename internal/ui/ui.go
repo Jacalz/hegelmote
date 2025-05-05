@@ -234,7 +234,7 @@ func Build(a fyne.App, w fyne.Window) (*mainUI, fyne.CanvasObject) {
 	ui.connectionLabel = &widget.Label{Text: "Disconnected", Truncation: fyne.TextTruncateEllipsis}
 	ui.connectionInfoButton = &widget.Button{Icon: theme.InfoIcon(), Importance: widget.LowImportance, OnTapped: ui.onConnectionInfo}
 
-	ui.setUpConnection(a.Preferences(), w)
+	ui.setUpConnection()
 
 	return ui, container.NewVBox(
 		ui.powerToggle,

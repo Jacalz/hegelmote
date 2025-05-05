@@ -18,19 +18,16 @@ import (
 func (m *mainUI) connect(host string, model device.Type) error {
 	err := m.amplifier.Connect(host, model)
 	if err != nil {
-		fyne.LogError("Failed to connect to amplifier", err)
 		return err
 	}
 
 	inputs, err := device.GetInputNames(model)
 	if err != nil {
-		fyne.LogError("Failed to get input names for model", err)
 		return err
 	}
 
 	err = m.load()
 	if err != nil {
-		fyne.LogError("Failed to load initial state", err)
 		return err
 	}
 
@@ -51,52 +48,58 @@ func (m *mainUI) Disconnect() {
 	m.connectionLabel.SetText("Disconnected")
 }
 
-func (m *mainUI) setUpConnection(prefs fyne.Preferences, w fyne.Window) {
+func (m *mainUI) setUpConnection() {
+	prefs := fyne.CurrentApp().Preferences()
 	host := prefs.String("host")
-	modelID := prefs.IntWithFallback("model", -1)
-	if host != "" && modelID >= 0 && modelID <= int(device.H590) {
-		err := m.connect(host, device.Type(modelID)) // #nosec - Range is checked above!
-		if err == nil {
-			return
-		}
-
-		prefs.RemoveValue("host")
-		prefs.RemoveValue("model")
+	model := device.Type(prefs.IntWithFallback("model", -1))
+	if host == "" || !device.IsSupported(model) {
+		m.showConnectionDialog()
+		return
 	}
 
-	showConnectionDialog(m, w)
+	go func() {
+		err := m.connect(host, model)
+		if err != nil {
+			fyne.LogError("Failed to connect to remembered connection", err)
+			fyne.Do(func() {
+				prefs.RemoveValue("host")
+				prefs.RemoveValue("model")
+				m.showConnectionDialog()
+			})
+		}
+	}()
 }
 
-func handleConnection(host string, model device.Type, remember bool, ui *mainUI) error {
-	err := ui.connect(host, model)
+func (m *mainUI) handleConnection(host string, model device.Type, remember bool) error {
+	err := m.connect(host, model)
 	if err != nil {
 		fyne.LogError("Failed to connect", err)
 		return err
 	}
 
-	if remember && model <= device.H590 {
+	if remember && device.IsSupported(model) {
 		prefs := fyne.CurrentApp().Preferences()
 		prefs.SetString("host", host)
-		prefs.SetInt("model", int(model)) // #nosec - Checked by model <= device.H590 above!
+		prefs.SetInt("model", int(model))
 	}
 	return nil
 }
 
-func selectManually(ui *mainUI, w fyne.Window) {
+func (m *mainUI) showManualConnectionDialog() {
 	hostname := &widget.Entry{PlaceHolder: "IP Address (no port)"}
 	models := &widget.Select{PlaceHolder: "Device type", Options: device.SupportedTypeNames()}
 	remember := &widget.Check{Text: "Remember connection"}
 	content := container.NewVBox(hostname, models, remember)
 
-	connectionDialog := dialog.NewCustomWithoutButtons("Connect to device", content, w)
+	connectionDialog := dialog.NewCustomWithoutButtons("Connect to device", content, m.window)
 	connect := &widget.Button{
 		Text:       "Connect",
 		Importance: widget.HighImportance,
 		OnTapped: func() {
 			model, _ := device.FromString(models.Selected)
-			err := handleConnection(hostname.Text, model, remember.Checked, ui)
+			err := m.handleConnection(hostname.Text, model, remember.Checked)
 			if err != nil {
-				dialog.ShowError(err, w)
+				dialog.ShowError(err, m.window)
 				return
 			}
 
@@ -116,19 +119,19 @@ func selectManually(ui *mainUI, w fyne.Window) {
 	fyne.Do(connectionDialog.Show)
 }
 
-func selectFromOneDevice(remote upnp.DiscoveredDevice, ui *mainUI, w fyne.Window) {
-	msg := widget.NewRichTextFromMarkdown(fmt.Sprintf("Found **Hegel %s** at **%s**.", device.SupportedTypeNames()[remote.Model], remote.Host))
+func (m *mainUI) showConnectOneDialog(remote upnp.DiscoveredDevice) {
+	msg := widget.NewRichTextFromMarkdown(fmt.Sprintf("Found **Hegel %s** at **%s**.", remote.Model.String(), remote.Host))
 	remember := &widget.Check{Text: "Remember connection"}
 	content := container.NewVBox(msg, remember)
-	connectionDialog := dialog.NewCustomWithoutButtons("Connect to device", content, w)
+	connectionDialog := dialog.NewCustomWithoutButtons("Connect to device", content, m.window)
 
 	connect := &widget.Button{
 		Text:       "Connect",
 		Importance: widget.HighImportance,
 		OnTapped: func() {
-			err := handleConnection(remote.Host, remote.Model, remember.Checked, ui)
+			err := m.handleConnection(remote.Host, remote.Model, remember.Checked)
 			if err != nil {
-				selectManually(ui, w)
+				m.showManualConnectionDialog()
 			}
 			connectionDialog.Hide()
 		},
@@ -137,17 +140,17 @@ func selectFromOneDevice(remote upnp.DiscoveredDevice, ui *mainUI, w fyne.Window
 	fyne.Do(connectionDialog.Show)
 }
 
-func selectFromMultipleDevices(remotes []upnp.DiscoveredDevice, ui *mainUI, w fyne.Window) {
+func (m *mainUI) showConnectMultipleDialog(remotes []upnp.DiscoveredDevice) {
 	options := make([]string, 0, len(remotes))
 	for _, remote := range remotes {
-		options = append(options, fmt.Sprintf("Hegel %s \u2013 %s", device.SupportedTypeNames()[remote.Model], remote.Host))
+		options = append(options, fmt.Sprintf("Hegel %s \u2013 %s", remote.Model.String(), remote.Host))
 	}
 
 	msg := &widget.Label{Text: "Multiple devices were discovered:"}
 	selection := &widget.Select{PlaceHolder: "Choose a device", Options: options}
 	remember := &widget.Check{Text: "Remember connection"}
 	content := container.NewVBox(msg, selection, remember)
-	connectionDialog := dialog.NewCustomWithoutButtons("Connect to device", content, w)
+	connectionDialog := dialog.NewCustomWithoutButtons("Connect to device", content, m.window)
 
 	connect := &widget.Button{
 		Text:       "Connect",
@@ -159,9 +162,9 @@ func selectFromMultipleDevices(remotes []upnp.DiscoveredDevice, ui *mainUI, w fy
 			}
 
 			remote := remotes[index]
-			err := handleConnection(remote.Host, remote.Model, remember.Checked, ui)
+			err := m.handleConnection(remote.Host, remote.Model, remember.Checked)
 			if err != nil {
-				selectManually(ui, w)
+				m.showManualConnectionDialog()
 			}
 			connectionDialog.Hide()
 		},
@@ -172,13 +175,13 @@ func selectFromMultipleDevices(remotes []upnp.DiscoveredDevice, ui *mainUI, w fy
 	fyne.Do(connectionDialog.Show)
 }
 
-func showConnectionDialog(ui *mainUI, w fyne.Window) {
+func (m *mainUI) showConnectionDialog() {
 	prop := canvas.NewRectangle(color.Transparent)
 	prop.SetMinSize(fyne.NewSquareSize(75))
 
 	activity := widget.NewActivity()
 	activity.Start()
-	d := dialog.NewCustomWithoutButtons("Looking for amplifiers on LAN\u2026", container.NewStack(prop, activity), w)
+	d := dialog.NewCustomWithoutButtons("Looking for amplifiers on LAN\u2026", container.NewStack(prop, activity), m.window)
 	d.SetOnClosed(activity.Stop)
 	d.Show()
 
@@ -187,23 +190,23 @@ func showConnectionDialog(ui *mainUI, w fyne.Window) {
 		devices, err := upnp.LookUpDevices()
 		if err != nil || len(devices) == 0 {
 			fyne.LogError("Failed to search for devices", err)
-			selectManually(ui, w)
+			m.showManualConnectionDialog()
 			return
 		}
 
 		if len(devices) > 1 {
-			selectFromMultipleDevices(devices, ui, w)
+			m.showConnectMultipleDialog(devices)
 			return
 		}
 
-		selectFromOneDevice(devices[0], ui, w)
+		m.showConnectOneDialog(devices[0])
 	}()
 }
 
 func (m *mainUI) onConnectionInfo() {
 	info := &widget.Form{Items: []*widget.FormItem{
 		{Text: "Address", Widget: &widget.Label{Text: m.host}},
-		{Text: "Model", Widget: &widget.Label{Text: "Hegel " + device.SupportedTypeNames()[m.amplifier.GetDeviceType()]}},
+		{Text: "Model", Widget: &widget.Label{Text: "Hegel " + m.amplifier.GetDeviceType().String()}},
 		{Text: "Status", Widget: &widget.Label{Text: m.connectionLabel.Text}},
 	}}
 
@@ -213,7 +216,7 @@ func (m *mainUI) onConnectionInfo() {
 	disconnect := &widget.Button{Text: "Disconnect", Icon: theme.CancelIcon(), Importance: widget.LowImportance, OnTapped: func() {
 		infoDialog.Hide()
 		m.Disconnect()
-		showConnectionDialog(m, m.window)
+		m.showConnectionDialog()
 	}}
 
 	forget := &widget.Button{Text: "Forget", Icon: theme.MediaReplayIcon(), Importance: widget.LowImportance}
@@ -224,8 +227,8 @@ func (m *mainUI) onConnectionInfo() {
 	}
 
 	host := prefs.String("host")
-	modelID := prefs.IntWithFallback("model", -1)
-	if host == "" || modelID == -1 {
+	model := device.Type(prefs.IntWithFallback("model", -1))
+	if host == "" || !device.IsSupported(model) {
 		forget.Disable()
 	}
 
