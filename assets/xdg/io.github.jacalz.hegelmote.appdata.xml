@@ -17,7 +17,16 @@
   </supports>
 
   <description>
-    <p>Hegelmote allows connecting to a supported Hegel amplifier to change turn it on or off, select input and change volume.</p> 
+    <p>Hegelmote lets you connect to, and control, Hegel amplifiers remotely. It connects using TCP to the device and allows turning it on and off, changing the input source and changing volume.</p>
+    <p>Supported amplifiers:</p>
+    <ul>
+      <li>Röst</li> 
+      <li>H95</li>
+      <li>H120</li>
+      <li>H190</li>
+      <li>H390</li>
+      <li>H590</li>
+    </ul>
   </description>
 
   <launchable type="desktop-id">io.github.jacalz.hegelmote.desktop</launchable>
@@ -56,6 +65,9 @@
   </branding>
 
   <releases>
+    <release version="0.9.1" date="2025-05-06" type="stable">
+      <url type="details">https://github.com/Jacalz/hegelmote/releases/tag/v0.9.1</url>
+    </release>
     <release version="0.9.0" date="2025-05-05" type="stable">
       <url type="details">https://github.com/Jacalz/hegelmote/releases/tag/v0.9.0</url>
     </release>

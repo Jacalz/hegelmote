@@ -2,8 +2,8 @@
   Icon = "assets/img/icon-512.png"
   Name = "Hegelmote"
   ID = "io.github.jacalz.hegelmote"
-  Version = "0.9.0"
-  Build = 5
+  Version = "0.9.1"
+  Build = 6
 
 [Migrations]
   fyneDo = true
