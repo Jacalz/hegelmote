@@ -29,6 +29,10 @@ This software has currently only been tested on `Hegel H95` but the list of supp
 ## Installing
 
 Release binaries for Linux, macOS, Windows and FreeBSD (plus experimental Android builds) can be downloaded [here](https://github.com/Jacalz/hegelmote/releases/latest).
+The recommended installation method for Linux is to use the Flatpak package from Flathub:
+
+<a href='https://flathub.org/apps/details/io.github.jacalz.hegelmote'><img width='200' alt='Download on Flathub' src='https://dl.flathub.org/assets/badges/flathub-badge-en.svg'/></a>
+
 
 ## Sources
 - **IP control command and Input table:** https://support.hegel.com/component/jdownloads/send/3-files/102-h95-h120-h190-h390-h590-ip-control-codes
