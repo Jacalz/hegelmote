@@ -9,7 +9,5 @@ import (
 )
 
 func init() {
-	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
-	}()
+	go log.Println(http.ListenAndServe("localhost:6060", nil))
 }
