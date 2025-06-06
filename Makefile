@@ -43,5 +43,4 @@ uninstall:
 
 wasm:
 	~/go/bin/fyne package -os wasm -release
-	go build ./cmd/webmote -o cmd/webmote/webmote
 .PHONY: wasm
