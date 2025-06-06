@@ -40,11 +40,3 @@ uninstall:
 	-rm $(DESTDIR)$(PREFIX)/share/applications/$(APPID).desktop
 	-rm $(DESTDIR)$(PREFIX)/share/appdata/$(APPID).appdata.xml
 .PHONY: uninstall
-
-profile:
-	go build -tags profile
-	./hegelmote &
-	sleep 1
-	curl -o default.pgo http://localhost:6060/debug/pprof/profile?seconds=30
-
-.PHONY: profile
