@@ -2,14 +2,14 @@
   Icon = "assets/img/icon-512.png"
   Name = "Hegelmote"
   ID = "io.github.jacalz.hegelmote"
-  Version = "0.9.2"
+  Version = "0.10.0"
   Build = 7
-
-[Migrations]
-  fyneDo = true
 
 [LinuxAndBSD]
   GenericName = "Hegel Amplifier Remote"
   Categories = ["Audio", "AudioVideo", "Network"]
   Comment = "Control your Hegel amplifier remotely."
   Keywords = ["Hegel", "amplifier", "music", "audio", "control", "remote", "fyne"]
+
+[Migrations]
+  fyneDo = true
