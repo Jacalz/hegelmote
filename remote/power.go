@@ -7,24 +7,15 @@ func (c *Control) SetPower(on bool) (bool, error) {
 		packet[3] = '1'
 	}
 
-	return c.power(packet)
+	return c.sendWithBoolResponse(packet)
 }
 
 // TogglePower toggles the power on and off.
 func (c *Control) TogglePower() (bool, error) {
-	return c.power([]byte("-p.t\r"))
+	return c.sendWithBoolResponse([]byte("-p.t\r"))
 }
 
 // GetPower returns the current power status.
 func (c *Control) GetPower() (bool, error) {
-	return c.power([]byte("-p.?\r"))
-}
-
-func (c *Control) power(packet []byte) (bool, error) {
-	_, err := c.conn.Write(packet)
-	if err != nil {
-		return false, err
-	}
-
-	return c.parseOnOffValue('p')
+	return c.sendWithBoolResponse([]byte("-p.?\r"))
 }

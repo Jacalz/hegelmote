@@ -80,6 +80,15 @@ func (c *Control) verifyResponse(buf [7]byte, n int) ([]byte, error) {
 	return buf[:n], nil
 }
 
+func (c *Control) sendWithBoolResponse(packet []byte) (bool, error) {
+	_, err := c.conn.Write(packet)
+	if err != nil {
+		return false, err
+	}
+
+	return c.parseOnOffValue(packet[1])
+}
+
 func (c *Control) parseOnOffValue(command byte) (bool, error) {
 	buf, err := c.read(command)
 	if err != nil {
@@ -87,6 +96,15 @@ func (c *Control) parseOnOffValue(command byte) (bool, error) {
 	}
 
 	return buf[3] == '1', nil
+}
+
+func (c *Control) sendWithNumericalResponse(packet []byte) (uint8, error) {
+	_, err := c.conn.Write(packet)
+	if err != nil {
+		return 0, err
+	}
+
+	return c.parseNumberFromResponse(packet[1])
 }
 
 func (c *Control) parseNumberFromResponse(command byte) (uint8, error) {

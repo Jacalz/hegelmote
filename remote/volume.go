@@ -19,29 +19,20 @@ func (c *Control) SetVolume(volume Volume) (Volume, error) {
 	packet = strconv.AppendUint(packet, uint64(volume), 10)
 	packet = append(packet, '\r')
 
-	return c.volume(packet)
+	return c.sendWithNumericalResponse(packet)
 }
 
 // VolumeUp increases the volume one step.
 func (c *Control) VolumeUp() (Volume, error) {
-	return c.volume([]byte("-v.u\r"))
+	return c.sendWithNumericalResponse([]byte("-v.u\r"))
 }
 
 // VolumeDown decreases the volume one step.
 func (c *Control) VolumeDown() (Volume, error) {
-	return c.volume([]byte("-v.d\r"))
+	return c.sendWithNumericalResponse([]byte("-v.d\r"))
 }
 
 // GetVolume returns the currrently selected volume percentage.
 func (c *Control) GetVolume() (Volume, error) {
-	return c.volume([]byte("-v.?\r"))
-}
-
-func (c *Control) volume(packet []byte) (Volume, error) {
-	_, err := c.conn.Write(packet)
-	if err != nil {
-		return 0, err
-	}
-
-	return c.parseNumberFromResponse('v')
+	return c.sendWithNumericalResponse([]byte("-v.?\r"))
 }
