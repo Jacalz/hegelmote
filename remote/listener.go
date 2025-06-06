@@ -1,14 +1,16 @@
 package remote
 
 import (
+	"errors"
 	"fmt"
 	"net"
-	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/Jacalz/hegelmote/device"
 )
+
+var errConnectionReset = errors.New("connection was reset")
 
 const resetInterval = 2 * time.Minute
 
@@ -29,8 +31,9 @@ func NewControlWithListener(
 		OnError:        OnError,
 	}
 
+	c.conn.reads = make(chan readResponse)
 	c.resetTicker.Stop()
-	c.runResetLoop()
+	go c.runResetLoop()
 	return c
 }
 
@@ -49,8 +52,9 @@ type ControlWithListener struct {
 	OnError        func(err error)
 
 	resetTicker *time.Ticker
-	connected   atomic.Bool
-	lock        sync.Mutex
+	sending     atomic.Bool
+	closing     atomic.Bool
+	conn        listenerConn
 }
 
 // GetDeviceType returns the device type of the currently connected amplifier.
@@ -65,8 +69,12 @@ func (c *ControlWithListener) Connect(host string, model device.Type) error {
 		return err
 	}
 
-	c.connected.Store(true)
-	c.runChangeListener()
+	// Update connection wrapper with new connection:
+	c.conn.Conn = c.control.conn
+	c.control.conn = &c.conn
+
+	c.closing.Store(false)
+	go c.runChangeListener()
 
 	c.resetTicker.Reset(resetInterval)
 	_, err = c.SetResetDelay(3)
@@ -75,175 +83,119 @@ func (c *ControlWithListener) Connect(host string, model device.Type) error {
 
 // Disconnect disconnects from the amplifier and stops the listener.
 func (c *ControlWithListener) Disconnect() error {
-	c.connected.Store(false)
 	c.resetTicker.Stop()
-
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.Disconnect()
+	c.closing.Store(true)
+	err := c.control.Disconnect()
+	c.conn.Conn = nil
+	return err
 }
 
 // SetPower sets the amplifier to be on or off depending on the passed bool value.
 func (c *ControlWithListener) SetPower(on bool) (bool, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.SetPower(on)
+	return sendWithArgument(&c.sending, c.control.SetPower, on)
 }
 
 // TogglePower toggles between on or off given the current state.
 func (c *ControlWithListener) TogglePower() (bool, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.TogglePower()
+	return send(&c.sending, c.control.TogglePower)
 }
 
-// GetPower returns the current power statuc.
+// GetPower returns the current power status.
 func (c *ControlWithListener) GetPower() (bool, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.GetPower()
+	return send(&c.sending, c.control.GetPower)
 }
 
 // SetVolumeMute sets the amplifier to be muted or unmuted given the passed bool value.
 func (c *ControlWithListener) SetVolumeMute(muted bool) (bool, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.SetVolumeMute(muted)
+	return sendWithArgument(&c.sending, c.control.SetVolumeMute, muted)
 }
 
 // ToggleVolumeMute toggles the volume between muted and unmuted given current state.
 func (c *ControlWithListener) ToggleVolumeMute() (bool, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.ToggleVolumeMute()
+	return send(&c.sending, c.control.ToggleVolumeMute)
 }
 
 // GetVolumeMute returns the curren state of volume being muted or not.
 func (c *ControlWithListener) GetVolumeMute() (bool, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.GetVolumeMute()
+	return send(&c.sending, c.control.GetVolumeMute)
 }
 
 // SetVolume sets the volume to the given value.
 func (c *ControlWithListener) SetVolume(volume Volume) (Volume, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.SetVolume(volume)
+	return sendWithArgument(&c.sending, c.control.SetVolume, volume)
 }
 
 // VolumeDown decreases the volume one step.
 func (c *ControlWithListener) VolumeDown() (Volume, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.VolumeDown()
+	return send(&c.sending, c.control.VolumeDown)
 }
 
 // VolumeUp increases the volume one step.
 func (c *ControlWithListener) VolumeUp() (Volume, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.VolumeUp()
+	return send(&c.sending, c.control.VolumeUp)
 }
 
 // GetVolume returns the current volume value.
 func (c *ControlWithListener) GetVolume() (Volume, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.GetVolume()
+	return send(&c.sending, c.control.GetVolume)
 }
 
 // SetInput sets the input to the given value.
 func (c *ControlWithListener) SetInput(input device.Input) (device.Input, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.SetInput(input)
+	return sendWithArgument(&c.sending, c.control.SetInput, input)
 }
 
 // GetInput returns the currently selected input.
 func (c *ControlWithListener) GetInput() (device.Input, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.GetInput()
+	return send(&c.sending, c.control.GetInput)
 }
 
 // SetResetDelay sets a timeout in minutes for when to reset the connection.
 func (c *ControlWithListener) SetResetDelay(delay Minutes) (Delay, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.SetResetDelay(delay)
+	return sendWithArgument(&c.sending, c.control.SetResetDelay, delay)
 }
 
 // StopResetDelay stops the reset delay from ticking down.
 func (c *ControlWithListener) StopResetDelay() (Delay, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.StopResetDelay()
+	return send(&c.sending, c.control.StopResetDelay)
 }
 
 // GetResetDelay returns the current delay for reset.
 func (c *ControlWithListener) GetResetDelay() (Delay, error) {
-	c.sendLock()
-	defer c.lock.Unlock()
-
-	return c.control.GetResetDelay()
+	return send(&c.sending, c.control.GetResetDelay)
 }
 
-// sendLock unblocks the reading state tracker, locks and reverts back to blocking read.
-func (c *ControlWithListener) sendLock() {
-	if conn := c.control.conn; conn != nil && conn.SetReadDeadline(time.Now()) == nil {
-		defer conn.SetReadDeadline(time.Time{})
+func (c *ControlWithListener) waitForResponse() error {
+	buf := [len("-v.100\r")]byte{}
+	n, err := c.conn.Conn.Read(buf[:])
+	if c.sending.CompareAndSwap(true, false) {
+		c.conn.reads <- readResponse{n: n, buf: buf[:], err: err}
+		return nil
+	} else if err != nil {
+		return err
 	}
 
-	c.lock.Lock()
-}
-
-func (c *ControlWithListener) trackState() error {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
-	resp, err := c.control.read()
+	resp, err := c.control.verifyResponse(buf, n)
 	if err != nil {
-		nerr, ok := err.(net.Error)
-		if ok && nerr.Timeout() || !c.connected.Load() {
-			return nil
-		}
-
 		return err
 	}
 
 	switch resp[1] {
 	case 'p':
 		c.OnPowerChange(resp[3] == '1')
-	case 'v':
-		volume, err := parseUint8FromBuf(resp)
-		if err != nil {
-			return err
-		}
-		c.OnVolumeChange(volume)
 	case 'm':
 		c.OnMuteChange(resp[3] == '1')
-	case 'i':
-		input, err := parseUint8FromBuf(resp)
+	case 'v', 'i':
+		number, err := parseUint8FromBuf(resp)
 		if err != nil {
 			return err
 		}
-		c.OnInputChange(input)
+
+		if resp[1] == 'v' {
+			c.OnVolumeChange(number)
+		} else {
+			c.OnInputChange(number)
+		}
 	case 'r':
 		if resp[3] == '0' {
 			c.OnReset()
@@ -258,28 +210,49 @@ func (c *ControlWithListener) trackState() error {
 }
 
 func (c *ControlWithListener) runChangeListener() {
-	go func() {
-		for {
-			err := c.trackState()
-			if err != nil {
+	for {
+		err := c.waitForResponse()
+		if err != nil {
+			if !errors.Is(err, errConnectionReset) && !c.closing.Load() {
 				c.OnError(err)
-				return
 			}
-
-			if !c.connected.Load() {
-				return
-			}
+			return
 		}
-	}()
+	}
 }
 
 func (c *ControlWithListener) runResetLoop() {
-	go func() {
-		for range c.resetTicker.C {
-			_, err := c.SetResetDelay(3)
-			if err != nil {
-				c.OnError(err)
-			}
+	for range c.resetTicker.C {
+		_, err := c.SetResetDelay(3)
+		if err != nil {
+			c.OnError(err)
 		}
-	}()
+	}
+}
+
+type readResponse struct {
+	buf []byte
+	n   int
+	err error
+}
+
+type listenerConn struct {
+	net.Conn
+	reads chan readResponse
+}
+
+func (l *listenerConn) Read(p []byte) (int, error) {
+	got := <-l.reads
+	copy(p, got.buf)
+	return got.n, got.err
+}
+
+func send[T any](sending *atomic.Bool, cmd func() (T, error)) (T, error) {
+	sending.Store(true)
+	return cmd()
+}
+
+func sendWithArgument[T, U any](sending *atomic.Bool, cmd func(U) (T, error), input U) (T, error) {
+	sending.Store(true)
+	return cmd(input)
 }

@@ -38,7 +38,9 @@ func (c *Control) Disconnect() error {
 		return nil
 	}
 
-	return c.conn.Close()
+	err := c.conn.Close()
+	c.conn = nil
+	return err
 }
 
 // GetDeviceType returns the device type of the current connection.
@@ -46,7 +48,7 @@ func (c *Control) GetDeviceType() device.Type {
 	return c.deviceType
 }
 
-func (c *Control) read() ([]byte, error) {
+func (c *Control) read(expectedCommand byte) ([]byte, error) {
 	buf := [len("-v.100\r")]byte{}
 
 	n, err := c.conn.Read(buf[:])
@@ -54,6 +56,19 @@ func (c *Control) read() ([]byte, error) {
 		return nil, err
 	}
 
+	resp, err := c.verifyResponse(buf, n)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp[1] != expectedCommand {
+		return nil, fmt.Errorf("unexpected response: %q", string(buf[:]))
+	}
+
+	return resp, nil
+}
+
+func (c *Control) verifyResponse(buf [7]byte, n int) ([]byte, error) {
 	if n < 5 {
 		return nil, fmt.Errorf("unexpected response: %q", string(buf[:]))
 	}
@@ -65,21 +80,8 @@ func (c *Control) read() ([]byte, error) {
 	return buf[:n], nil
 }
 
-func (c *Control) readCommand(expectedCommand byte) ([]byte, error) {
-	buf, err := c.read()
-	if err != nil {
-		return nil, err
-	}
-
-	if buf[1] != expectedCommand {
-		return nil, fmt.Errorf("unexpected response: %q", string(buf))
-	}
-
-	return buf, nil
-}
-
 func (c *Control) parseOnOffValue(command byte) (bool, error) {
-	buf, err := c.readCommand(command)
+	buf, err := c.read(command)
 	if err != nil {
 		return false, err
 	}
@@ -88,7 +90,7 @@ func (c *Control) parseOnOffValue(command byte) (bool, error) {
 }
 
 func (c *Control) parseNumberFromResponse(command byte) (uint8, error) {
-	buf, err := c.readCommand(command)
+	buf, err := c.read(command)
 	if err != nil {
 		return 0, err
 	}

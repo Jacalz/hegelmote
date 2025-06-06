@@ -50,7 +50,7 @@ func (c *Control) GetResetDelay() (Delay, error) {
 }
 
 func (c *Control) parseResetResponse() (Delay, error) {
-	buf, err := c.readCommand('r')
+	buf, err := c.read('r')
 	if err != nil {
 		return Delay{}, err
 	}
