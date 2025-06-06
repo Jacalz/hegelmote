@@ -29,12 +29,7 @@ func (c *Control) SetInput(number device.Input) (device.Input, error) {
 	packet = strconv.AppendUint(packet, uint64(number), 10)
 	packet = append(packet, '\r')
 
-	_, err := c.conn.Write(packet)
-	if err != nil {
-		return 0, err
-	}
-
-	return c.parseInputResponse()
+	return c.input(packet)
 }
 
 // GetInputName returns the currently selected input source.
@@ -50,14 +45,14 @@ func (c *Control) GetInputName() (string, error) {
 
 // GetInput returns the currently selected source number.
 func (c *Control) GetInput() (device.Input, error) {
-	_, err := c.conn.Write([]byte("-i.?\r"))
+	return c.input([]byte("-i.?\r"))
+}
+
+func (c *Control) input(packet []byte) (device.Input, error) {
+	_, err := c.conn.Write(packet)
 	if err != nil {
 		return 0, err
 	}
 
-	return c.parseInputResponse()
-}
-
-func (c *Control) parseInputResponse() (device.Input, error) {
 	return c.parseNumberFromResponse('i')
 }
