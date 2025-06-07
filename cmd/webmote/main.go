@@ -11,7 +11,7 @@ func main() {
 	http.Handle("/proxy", http.HandlerFunc(proxyHandler))
 	http.Handle("/upnp", http.HandlerFunc(upnpHandler))
 
-	const port = "8080"
+	const port = "8086"
 	fmt.Println("Serving at: http://localhost:" + port)
 	err := http.ListenAndServe(":"+port, nil)
 	if err != nil {

@@ -10,7 +10,7 @@ import (
 )
 
 func (c *Control) connect(host string, model device.Type) error {
-	ws, _, err := websocket.Dial(context.Background(), "ws://localhost:8080/proxy", nil)
+	ws, _, err := websocket.Dial(context.Background(), "ws://localhost:8086/proxy", nil)
 	if err != nil {
 		return err
 	}
@@ -20,7 +20,25 @@ func (c *Control) connect(host string, model device.Type) error {
 		return err
 	}
 
-	c.conn = websocket.NetConn(context.Background(), ws, websocket.MessageText)
+	c.conn = &wsWrapper{ws: ws}
 	c.deviceType = model
 	return nil
+}
+
+type wsWrapper struct {
+	ws *websocket.Conn
+}
+
+func (w *wsWrapper) Read(p []byte) (int, error) {
+	_, buf, err := w.ws.Read(context.Background())
+	copy(p, buf)
+	return len(buf), err
+}
+
+func (w *wsWrapper) Write(p []byte) (int, error) {
+	return len(p), w.ws.Write(context.Background(), websocket.MessageText, p)
+}
+
+func (w *wsWrapper) Close() error {
+	return w.ws.CloseNow()
 }

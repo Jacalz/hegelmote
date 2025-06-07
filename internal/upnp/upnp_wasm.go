@@ -11,7 +11,7 @@ import (
 
 // LookUpDevices searches the local network for discoverable devices.
 func LookUpDevices() ([]DiscoveredDevice, error) {
-	ws, _, err := websocket.Dial(context.Background(), "ws://localhost:8080/upnp", nil)
+	ws, _, err := websocket.Dial(context.Background(), "ws://localhost:8086/upnp", nil)
 	if err != nil {
 		return nil, err
 	}

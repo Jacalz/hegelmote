@@ -2,7 +2,7 @@ package remote
 
 import (
 	"fmt"
-	"net"
+	"io"
 	"strconv"
 
 	"github.com/Jacalz/hegelmote/device"
@@ -12,7 +12,7 @@ import (
 type Control struct {
 	deviceType device.Type
 
-	conn net.Conn
+	conn io.ReadWriteCloser
 }
 
 // Connect connects to the supplied host address. A port should not be specified.
@@ -50,7 +50,7 @@ func (c *Control) read(expectedCommand byte) ([]byte, error) {
 	}
 
 	if resp[1] != expectedCommand {
-		return nil, fmt.Errorf("unexpected response: %q", string(buf[:]))
+		return nil, fmt.Errorf("unexpected response: %q", buf[:])
 	}
 
 	return resp, nil
@@ -58,7 +58,7 @@ func (c *Control) read(expectedCommand byte) ([]byte, error) {
 
 func (c *Control) verifyResponse(buf [7]byte, n int) ([]byte, error) {
 	if n < 5 {
-		return nil, fmt.Errorf("unexpected response: %q", string(buf[:]))
+		return nil, fmt.Errorf("unexpected response: %q", buf[:])
 	}
 
 	if buf[1] == 'e' {
@@ -109,7 +109,7 @@ func parseUint8FromBuf(buf []byte) (uint8, error) {
 	for i := 3; i < len(buf)-1 && buf[i] != '\r'; i++ {
 		char := buf[i]
 		if char < '0' || char > '9' {
-			return 0, fmt.Errorf("invalid uint8 value: %s", string(buf))
+			return 0, fmt.Errorf("invalid uint8 value: %q", buf[:])
 		}
 
 		number = number*10 + uint16(char-'0')

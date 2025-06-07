@@ -3,7 +3,7 @@
   Name = "Hegelmote"
   ID = "io.github.jacalz.hegelmote"
   Version = "0.10.0"
-  Build = 7
+  Build = 11
 
 [LinuxAndBSD]
   GenericName = "Hegel Amplifier Remote"
