@@ -3,8 +3,10 @@ package remote
 import (
 	"bytes"
 	"net"
+	"testing"
 
 	"github.com/Jacalz/hegelmote/device"
+	"github.com/alecthomas/assert/v2"
 )
 
 type mockConnection struct {
@@ -49,4 +51,28 @@ func newControlMock() (*Control, *mockConnection) {
 	adapter := &mockConnection{}
 	control.conn = adapter
 	return control, adapter
+}
+
+var parseUint8FromBufTestcases = []struct {
+	in    string
+	val   uint8
+	error bool
+}{
+	{"-v.0\r", 0, false},
+	{"-v.10\r", 10, false},
+	{"-v.100\r", 100, false},
+	{"-v.255\r", 255, false},
+	{"-v.256\r", 0, true},
+	{"-v.a23\r", 0, true},
+	{"-v.1bc\r", 0, true},
+	{"-v.12c\r", 0, true},
+	{"-v.100\rxxxxxxxx", 100, false},
+}
+
+func TestParseUint8FromBuf(t *testing.T) {
+	for _, tc := range parseUint8FromBufTestcases {
+		out, err := parseUint8FromBuf([]byte(tc.in))
+		assert.Equal(t, tc.val, out)
+		assert.Equal(t, tc.error, err != nil)
+	}
 }
