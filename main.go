@@ -3,11 +3,12 @@ package main
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"github.com/Jacalz/hegelmote/internal/profile"
 	"github.com/Jacalz/hegelmote/internal/ui"
 )
 
 func main() {
-	stop := profile()
+	stop := profile.Start()
 	if stop != nil {
 		defer stop()
 	}

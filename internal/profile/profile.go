@@ -1,6 +1,6 @@
 //go:build profile
 
-package main
+package profile
 
 import (
 	"log"
@@ -8,7 +8,7 @@ import (
 	"runtime/pprof"
 )
 
-func profile() func() {
+func Start() func() {
 	f, err := os.Create("default.pgo")
 	if err != nil {
 		log.Fatal("Could not create CPU profile: ", err)

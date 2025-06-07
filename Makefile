@@ -40,3 +40,7 @@ uninstall:
 	-rm $(DESTDIR)$(PREFIX)/share/applications/$(APPID).desktop
 	-rm $(DESTDIR)$(PREFIX)/share/appdata/$(APPID).appdata.xml
 .PHONY: uninstall
+
+wasm:
+	~/go/bin/fyne package -os wasm -release
+.PHONY: wasm
