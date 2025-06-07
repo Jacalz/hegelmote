@@ -16,7 +16,7 @@ func main() {
 		defer stop()
 	}
 
-	http.Handle("/", http.FileServer(http.Dir("./wasm")))
+	http.Handle("/", http.FileServer(http.Dir("../../wasm")))
 	http.Handle("/proxy", http.HandlerFunc(proxyHandler))
 	http.Handle("/upnp", http.HandlerFunc(upnpHandler))
 
