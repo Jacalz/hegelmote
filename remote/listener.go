@@ -1,7 +1,6 @@
 package remote
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"sync/atomic"
@@ -9,8 +8,6 @@ import (
 
 	"github.com/Jacalz/hegelmote/device"
 )
-
-var errConnectionReset = errors.New("connection was reset")
 
 const resetInterval = 2 * time.Minute
 
@@ -213,7 +210,7 @@ func (c *ControlWithListener) runChangeListener() {
 	for {
 		err := c.waitForResponse()
 		if err != nil {
-			if !errors.Is(err, errConnectionReset) && !c.closing.Load() {
+			if !c.closing.Load() {
 				c.OnError(err)
 			}
 			return
