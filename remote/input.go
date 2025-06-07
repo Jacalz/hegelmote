@@ -1,8 +1,6 @@
 package remote
 
 import (
-	"strconv"
-
 	"github.com/Jacalz/hegelmote/device"
 )
 
@@ -24,11 +22,7 @@ func (c *Control) SetInput(number device.Input) (device.Input, error) {
 		return 0, errInputIsZero
 	}
 
-	packet := make([]byte, 0, 7)
-	packet = append(packet, "-i."...)
-	packet = strconv.AppendUint(packet, uint64(number), 10)
-	packet = append(packet, '\r')
-
+	packet := createNumericalPacket('i', number)
 	return c.sendWithNumericalResponse(packet)
 }
 

@@ -1,9 +1,5 @@
 package remote
 
-import (
-	"strconv"
-)
-
 // Delay specifies the status of the connection reset.
 type Delay struct {
 	Minutes Minutes
@@ -15,11 +11,7 @@ type Minutes = uint8
 
 // SetResetDelay sets a timeout, in minutes, for when to reset.
 func (c *Control) SetResetDelay(delay Minutes) (Delay, error) {
-	packet := make([]byte, 0, 7)
-	packet = append(packet, "-r."...)
-	packet = strconv.AppendUint(packet, uint64(delay), 10)
-	packet = append(packet, '\r')
-
+	packet := createNumericalPacket('r', delay)
 	return c.reset(packet)
 }
 

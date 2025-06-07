@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strconv"
 	"time"
 
 	"github.com/Jacalz/hegelmote/device"
@@ -132,4 +133,19 @@ func parseUint8FromBuf(buf []byte) (uint8, error) {
 	}
 
 	return uint8(number), nil
+}
+
+func createNumericalPacket(command byte, value uint8) []byte {
+	packet := make([]byte, 0, 7)
+	packet = append(packet, '-', command, '.')
+	packet = strconv.AppendUint(packet, uint64(value), 10)
+	return append(packet, '\r')
+}
+
+func createBooleanPacket(command byte, value bool) []byte {
+	packet := []byte{'-', command, '.', '0', '\r'}
+	if value {
+		packet[3] = '1'
+	}
+	return packet
 }

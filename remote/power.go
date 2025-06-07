@@ -2,11 +2,7 @@ package remote
 
 // SetPower sets the power to either on or off.
 func (c *Control) SetPower(on bool) (bool, error) {
-	packet := []byte("-p.0\r")
-	if on {
-		packet[3] = '1'
-	}
-
+	packet := createBooleanPacket('p', on)
 	return c.sendWithBoolResponse(packet)
 }
 

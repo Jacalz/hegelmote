@@ -2,7 +2,6 @@ package remote
 
 import (
 	"fmt"
-	"strconv"
 )
 
 // Volume specifies a volume in the range 0 to 100.
@@ -14,11 +13,7 @@ func (c *Control) SetVolume(volume Volume) (Volume, error) {
 		return 0, fmt.Errorf("invalid volume: %d", volume)
 	}
 
-	packet := make([]byte, 0, 7)
-	packet = append(packet, "-v."...)
-	packet = strconv.AppendUint(packet, uint64(volume), 10)
-	packet = append(packet, '\r')
-
+	packet := createNumericalPacket('v', volume)
 	return c.sendWithNumericalResponse(packet)
 }
 

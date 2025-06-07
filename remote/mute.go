@@ -2,11 +2,7 @@ package remote
 
 // SetVolumeMute allows turning on or off mute.
 func (c *Control) SetVolumeMute(mute bool) (bool, error) {
-	packet := []byte("-m.0\r")
-	if mute {
-		packet[3] = '1'
-	}
-
+	packet := createBooleanPacket('m', mute)
 	return c.sendWithBoolResponse(packet)
 }
 
