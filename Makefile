@@ -44,3 +44,7 @@ uninstall:
 wasm:
 	~/go/bin/fyne package -os wasm -release
 .PHONY: wasm
+
+wasm-opt: wasm
+	wasm-opt wasm/Hegelmote.wasm --enable-bulk-memory-opt -O2 -o wasm/Hegelmote.wasm
+.PHONY: wasm-opt
