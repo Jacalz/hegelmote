@@ -31,24 +31,34 @@ func proxyHandler(w http.ResponseWriter, r *http.Request) {
 	sending := atomic.Bool{}
 	output := make(chan readResponse)
 
-	go func() {
-		for {
-			buf := make([]byte, 32)
-			n, err := amp.Read(buf)
-			if sending.CompareAndSwap(true, false) {
-				output <- readResponse{buf[:n], n, err}
-				continue
-			} else if err != nil {
-				log.Fatalln("Error reading from amplifier:", err)
-			}
+	go listenOnAmplifier(amp, ws, &sending, output)
+	listenOnClient(amp, ws, &sending, output)
+}
 
-			err = ws.Write(context.Background(), websocket.MessageText, buf[:n])
-			if err != nil {
-				log.Fatalln("Error writing to socket:", err)
-			}
+type readResponse struct {
+	buf []byte
+	err error
+}
+
+func listenOnAmplifier(amp net.Conn, ws *websocket.Conn, sending *atomic.Bool, output chan<- readResponse) {
+	for {
+		buf := make([]byte, 32)
+		n, err := amp.Read(buf)
+		if sending.CompareAndSwap(true, false) {
+			output <- readResponse{buf[:n], err}
+			continue
+		} else if err != nil {
+			log.Fatalln("Error reading from amplifier:", err)
 		}
-	}()
 
+		err = ws.Write(context.Background(), websocket.MessageText, buf[:n])
+		if err != nil {
+			log.Fatalln("Error writing to socket:", err)
+		}
+	}
+}
+
+func listenOnClient(amp net.Conn, ws *websocket.Conn, sending *atomic.Bool, output <-chan readResponse) {
 	for {
 		_, data, err := ws.Read(context.Background())
 		if err != nil {
@@ -56,7 +66,6 @@ func proxyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		sending.Store(true)
-
 		_, err = amp.Write(data)
 		if err != nil {
 			log.Fatalln("Error writing to amplifier:", err)
@@ -72,10 +81,4 @@ func proxyHandler(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln("Error writing back to socket:", err)
 		}
 	}
-}
-
-type readResponse struct {
-	buf []byte
-	n   int
-	err error
 }
