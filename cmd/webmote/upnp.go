@@ -18,13 +18,14 @@ type upnpResponse struct {
 func upnpHandler(w http.ResponseWriter, r *http.Request) {
 	ws, err := websocket.Accept(w, r, nil)
 	if err != nil {
-		log.Fatalln("Failed to accept upnp socket:", err)
+		log.Println("Failed to accept upnp socket:", err)
+		return
 	}
 	defer ws.CloseNow()
 
 	devices, err := upnp.LookUpDevices()
 	err = wsjson.Write(context.Background(), ws, upnpResponse{devices, err})
 	if err != nil {
-		log.Fatalln("Failed to write upnp devices:", err)
+		log.Println("Failed to write upnp devices:", err)
 	}
 }
