@@ -44,8 +44,9 @@ uninstall:
 wasm:
 	~/go/bin/fyne package -os wasm -release
 	cp assets/img/favicon.png wasm/icon.png
+	mv wasm cmd/webmote/wasm
 .PHONY: wasm
 
 wasm-opt: wasm
-	wasm-opt wasm/Hegelmote.wasm --enable-bulk-memory-opt -O2 -o wasm/Hegelmote.wasm
+	wasm-opt cmd/webmote/wasm/Hegelmote.wasm --enable-bulk-memory-opt -O2 -o cmd/webmote/wasm/Hegelmote.wasm
 .PHONY: wasm-opt
