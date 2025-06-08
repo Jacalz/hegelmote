@@ -11,6 +11,7 @@ hegelmote
 wasm
 cmd/webmote/webmote
 cmd/webmote/wasm
+*.log
 
 # Test binary, built with `go test -c`
 *.test

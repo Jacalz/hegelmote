@@ -3,8 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -29,6 +32,15 @@ func main() {
 		return
 	}
 
+	logfile, err := os.CreateTemp(".", "hegelmote-*.log")
+	if err != nil {
+		log.Fatalln("Error creating log file:", err)
+	}
+	defer logfile.Close()
+
+	logger := slog.NewTextHandler(io.MultiWriter(os.Stdout, logfile), nil)
+	slog.SetDefault(slog.New(logger))
+
 	if !noWASM {
 		http.Handle("/", http.FileServer(http.Dir("./wasm")))
 	}
@@ -40,7 +52,7 @@ func main() {
 	fmt.Printf("Serving at: http://localhost:%s\n", portString)
 
 	server := http.Server{Addr: ":" + portString, ReadTimeout: time.Second, WriteTimeout: time.Second}
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatalln("Error when running server:", err)
 	}

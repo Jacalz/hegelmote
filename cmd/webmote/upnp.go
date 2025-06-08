@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/Jacalz/hegelmote/internal/upnp"
@@ -16,9 +16,11 @@ type upnpResponse struct {
 }
 
 func upnpHandler(w http.ResponseWriter, r *http.Request) {
+	slog.Info("New UPNP lookup", slog.String("remote", r.RemoteAddr))
+
 	ws, err := websocket.Accept(w, r, nil)
 	if err != nil {
-		log.Println("Failed to accept upnp socket:", err)
+		slog.Error("Failed to accept upnp socket:", slog.String("error", err.Error()))
 		return
 	}
 	defer ws.CloseNow()
@@ -26,6 +28,6 @@ func upnpHandler(w http.ResponseWriter, r *http.Request) {
 	devices, err := upnp.LookUpDevices()
 	err = wsjson.Write(context.Background(), ws, upnpResponse{devices, err})
 	if err != nil {
-		log.Println("Failed to write upnp devices:", err)
+		slog.Error("Failed to write upnp devices:", slog.String("error", err.Error()))
 	}
 }
