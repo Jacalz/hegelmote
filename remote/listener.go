@@ -2,7 +2,7 @@ package remote
 
 import (
 	"fmt"
-	"net"
+	"io"
 	"sync/atomic"
 	"time"
 
@@ -67,7 +67,7 @@ func (c *ControlWithListener) Connect(host string, model device.Type) error {
 	}
 
 	// Update connection wrapper with new connection:
-	c.conn.Conn = c.control.conn
+	c.conn.ReadWriteCloser = c.control.conn
 	c.control.conn = &c.conn
 
 	c.closing.Store(false)
@@ -83,7 +83,7 @@ func (c *ControlWithListener) Disconnect() error {
 	c.resetTicker.Stop()
 	c.closing.Store(true)
 	err := c.control.Disconnect()
-	c.conn.Conn = nil
+	c.conn.ReadWriteCloser = nil
 	return err
 }
 
@@ -164,7 +164,7 @@ func (c *ControlWithListener) GetResetDelay() (Delay, error) {
 
 func (c *ControlWithListener) waitForResponse() error {
 	buf := [len("-v.100\r")]byte{}
-	n, err := c.conn.Conn.Read(buf[:])
+	n, err := c.conn.ReadWriteCloser.Read(buf[:])
 	if c.sending.CompareAndSwap(true, false) {
 		c.conn.reads <- readResponse{n: n, buf: buf[:], err: err}
 		return nil
@@ -234,7 +234,7 @@ type readResponse struct {
 }
 
 type listenerConn struct {
-	net.Conn
+	io.ReadWriteCloser
 	reads chan readResponse
 }
 

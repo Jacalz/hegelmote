@@ -40,3 +40,11 @@ uninstall:
 	-rm $(DESTDIR)$(PREFIX)/share/applications/$(APPID).desktop
 	-rm $(DESTDIR)$(PREFIX)/share/appdata/$(APPID).appdata.xml
 .PHONY: uninstall
+
+wasm:
+	~/go/bin/fyne package -os wasm -release
+.PHONY: wasm
+
+wasm-opt: wasm
+	wasm-opt wasm/Hegelmote.wasm --enable-bulk-memory-opt -O2 -o wasm/Hegelmote.wasm
+.PHONY: wasm-opt
