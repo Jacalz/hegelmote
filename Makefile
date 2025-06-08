@@ -43,6 +43,7 @@ uninstall:
 
 wasm:
 	~/go/bin/fyne package -os wasm -release
+	cp assets/img/favicon.png wasm/icon.png
 .PHONY: wasm
 
 wasm-opt: wasm
