@@ -28,7 +28,6 @@ func NewControlWithListener(
 		OnError:        OnError,
 	}
 
-	c.conn.reads = make(chan readResponse)
 	c.resetTicker.Stop()
 	go c.runResetLoop()
 	return c
@@ -51,7 +50,6 @@ type ControlWithListener struct {
 	resetTicker *time.Ticker
 	sending     atomic.Bool
 	closing     atomic.Bool
-	conn        listenerConn
 }
 
 // GetDeviceType returns the device type of the currently connected amplifier.
@@ -66,12 +64,11 @@ func (c *ControlWithListener) Connect(host string, model device.Type) error {
 		return err
 	}
 
-	// Update connection wrapper with new connection:
-	c.conn.ReadWriteCloser = c.control.conn
-	c.control.conn = &c.conn
-
 	c.closing.Store(false)
-	go c.runChangeListener()
+
+	wrappedConn := &listenerConn{ReadWriteCloser: c.control.conn, reads: make(chan readResponse)}
+	c.control.conn = wrappedConn
+	go c.runChangeListener(wrappedConn)
 
 	c.resetTicker.Reset(resetInterval)
 	_, err = c.SetResetDelay(3)
@@ -82,9 +79,7 @@ func (c *ControlWithListener) Connect(host string, model device.Type) error {
 func (c *ControlWithListener) Disconnect() error {
 	c.resetTicker.Stop()
 	c.closing.Store(true)
-	err := c.control.Disconnect()
-	c.conn.ReadWriteCloser = nil
-	return err
+	return c.control.Disconnect()
 }
 
 // SetPower sets the amplifier to be on or off depending on the passed bool value.
@@ -162,11 +157,11 @@ func (c *ControlWithListener) GetResetDelay() (Delay, error) {
 	return send(&c.sending, c.control.GetResetDelay)
 }
 
-func (c *ControlWithListener) waitForResponse() error {
+func (c *ControlWithListener) waitForResponse(conn *listenerConn) error {
 	buf := [len("-v.100\r")]byte{}
-	n, err := c.conn.ReadWriteCloser.Read(buf[:])
+	n, err := conn.ReadWriteCloser.Read(buf[:])
 	if c.sending.CompareAndSwap(true, false) {
-		c.conn.reads <- readResponse{n: n, buf: buf[:], err: err}
+		conn.reads <- readResponse{n: n, buf: buf[:], err: err}
 		return nil
 	} else if err != nil {
 		return err
@@ -206,9 +201,9 @@ func (c *ControlWithListener) waitForResponse() error {
 	return nil
 }
 
-func (c *ControlWithListener) runChangeListener() {
+func (c *ControlWithListener) runChangeListener(conn *listenerConn) {
 	for {
-		err := c.waitForResponse()
+		err := c.waitForResponse(conn)
 		if err != nil {
 			if !c.closing.Load() {
 				c.OnError(err)
