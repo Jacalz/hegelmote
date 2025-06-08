@@ -42,9 +42,10 @@ uninstall:
 .PHONY: uninstall
 
 wasm:
+	rm -rf wasm cmd/webmote/wasm
 	~/go/bin/fyne package -os wasm -release
 	cp assets/img/favicon.png wasm/icon.png
-	mv wasm cmd/webmote/wasm
+	mv wasm cmd/webmote
 .PHONY: wasm
 
 wasm-opt: wasm
