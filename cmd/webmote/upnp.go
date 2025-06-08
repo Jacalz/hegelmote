@@ -10,6 +10,11 @@ import (
 	"github.com/coder/websocket/wsjson"
 )
 
+type upnpResponse struct {
+	Devices []upnp.DiscoveredDevice `json:"devices"`
+	Err     error                   `json:"error"`
+}
+
 func upnpHandler(w http.ResponseWriter, r *http.Request) {
 	ws, err := websocket.Accept(w, r, nil)
 	if err != nil {
@@ -18,11 +23,7 @@ func upnpHandler(w http.ResponseWriter, r *http.Request) {
 	defer ws.CloseNow()
 
 	devices, err := upnp.LookUpDevices()
-	if err != nil {
-		log.Fatalln("Failed to look up UPnP devices:", err)
-	}
-
-	err = wsjson.Write(context.Background(), ws, devices)
+	err = wsjson.Write(context.Background(), ws, upnpResponse{devices, err})
 	if err != nil {
 		log.Fatalln("Failed to write upnp devices:", err)
 	}
