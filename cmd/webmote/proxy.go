@@ -32,8 +32,8 @@ func proxyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func forwardFromAmplifier(amp net.Conn, ws *websocket.Conn) {
+	buf := make([]byte, 32)
 	for {
-		buf := make([]byte, 32)
 		n, err := amp.Read(buf)
 		if err != nil {
 			log.Fatalln("Error reading from amplifier:", err)
