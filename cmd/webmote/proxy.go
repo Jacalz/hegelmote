@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"sync/atomic"
 
 	"github.com/coder/websocket"
 )
@@ -28,26 +27,15 @@ func proxyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer amp.Close()
 
-	sending := atomic.Bool{}
-	output := make(chan readResponse)
-
-	go listenOnAmplifier(amp, ws, &sending, output)
-	listenOnClient(amp, ws, &sending, output)
+	go forwardFromAmplifier(amp, ws)
+	forwardFromClient(amp, ws)
 }
 
-type readResponse struct {
-	buf []byte
-	err error
-}
-
-func listenOnAmplifier(amp net.Conn, ws *websocket.Conn, sending *atomic.Bool, output chan<- readResponse) {
+func forwardFromAmplifier(amp net.Conn, ws *websocket.Conn) {
 	for {
 		buf := make([]byte, 32)
 		n, err := amp.Read(buf)
-		if sending.CompareAndSwap(true, false) {
-			output <- readResponse{buf[:n], err}
-			continue
-		} else if err != nil {
+		if err != nil {
 			log.Fatalln("Error reading from amplifier:", err)
 		}
 
@@ -58,27 +46,16 @@ func listenOnAmplifier(amp net.Conn, ws *websocket.Conn, sending *atomic.Bool, o
 	}
 }
 
-func listenOnClient(amp net.Conn, ws *websocket.Conn, sending *atomic.Bool, output <-chan readResponse) {
+func forwardFromClient(amp net.Conn, ws *websocket.Conn) {
 	for {
 		_, data, err := ws.Read(context.Background())
 		if err != nil {
 			log.Fatalln("Error reading from socket:", err)
 		}
 
-		sending.Store(true)
 		_, err = amp.Write(data)
 		if err != nil {
 			log.Fatalln("Error writing to amplifier:", err)
-		}
-
-		result := <-output
-		if result.err != nil {
-			log.Fatalln("Error reading from amplifier:", result.err)
-		}
-
-		err = ws.Write(context.Background(), websocket.MessageText, result.buf)
-		if err != nil {
-			log.Fatalln("Error writing back to socket:", err)
 		}
 	}
 }
