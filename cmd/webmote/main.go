@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/Jacalz/hegelmote/internal/profile"
 )
@@ -27,7 +28,7 @@ func main() {
 	portString := strconv.FormatUint(port, 10)
 	fmt.Printf("Serving at: http://localhost:%s\n", portString)
 
-	server := http.Server{Addr: ":" + portString}
+	server := http.Server{Addr: ":" + portString, ReadTimeout: time.Second, WriteTimeout: time.Second}
 	err := server.ListenAndServe()
 	if err != nil {
 		log.Fatalln("Error when running server:", err)
