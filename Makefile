@@ -43,7 +43,7 @@ uninstall:
 
 wasm:
 	rm -rf wasm cmd/webmote/wasm
-	~/go/bin/fyne package -os wasm -release
+	~/go/bin/fyne package -os wasm -release -tags no_emoji
 	cp assets/img/favicon.png wasm/icon.png
 	mv wasm cmd/webmote
 .PHONY: wasm
