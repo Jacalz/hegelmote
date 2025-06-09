@@ -78,6 +78,9 @@ func (p *proxy) forwardFromAmplifier() error {
 
 		err = p.ws.Write(p.ctx, websocket.MessageText, buf[:n])
 		if err != nil {
+			if isAcceptedError(err) {
+				return nil
+			}
 			slog.Error("Error writing to socket", slog.String("reason", err.Error()))
 			return err
 		}
@@ -97,6 +100,9 @@ func (p *proxy) forwardFromClient() error {
 
 		_, err = p.amp.Write(data)
 		if err != nil {
+			if strings.Contains(err.Error(), "use of closed network connection") {
+				return nil
+			}
 			slog.Error("Error writing to amplifier", slog.String("reason", err.Error()))
 			return err
 		}
