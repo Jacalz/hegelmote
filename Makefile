@@ -49,5 +49,5 @@ wasm:
 .PHONY: wasm
 
 wasm-opt: wasm
-	wasm-opt cmd/webmote/wasm/Hegelmote.wasm --enable-bulk-memory-opt -O2 -o cmd/webmote/wasm/Hegelmote.wasm
+	wasm-opt cmd/webmote/wasm/Hegelmote.wasm --enable-bulk-memory-opt -O4 -o cmd/webmote/wasm/Hegelmote.wasm
 .PHONY: wasm-opt
