@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 
 	"github.com/coder/websocket"
+	"golang.org/x/sync/errgroup"
 )
 
 var id atomic.Uint64
@@ -17,16 +18,19 @@ func proxyHandler(w http.ResponseWriter, r *http.Request) {
 	pid := id.Add(1)
 	slog.Info("New proxy connection", slog.Uint64("id", pid), slog.String("source", r.RemoteAddr))
 
-	runProxy(w, r)
+	err := runProxy(w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 
 	slog.Info("Closing proxy connection", slog.Uint64("id", pid), slog.String("source", r.RemoteAddr))
 }
 
-func runProxy(w http.ResponseWriter, r *http.Request) {
+func runProxy(w http.ResponseWriter, r *http.Request) error {
 	ws, err := websocket.Accept(w, r, nil)
 	if err != nil {
 		slog.Error("Failed to accept proxy socket:", slog.String("reason", err.Error()))
-		return
+		return err
 	}
 	defer ws.Close(websocket.StatusNormalClosure, "")
 
@@ -34,12 +38,14 @@ func runProxy(w http.ResponseWriter, r *http.Request) {
 	err = prx.connect()
 	if err != nil {
 		slog.Error("Failed to connect to amplifier:", slog.String("reason", err.Error()))
-		return
+		return err
 	}
 	defer prx.amp.Close()
 
-	go prx.forwardFromAmplifier()
-	prx.forwardFromClient()
+	wg := errgroup.Group{}
+	wg.Go(prx.forwardFromAmplifier)
+	wg.Go(prx.forwardFromClient)
+	return wg.Wait()
 }
 
 type proxy struct {
@@ -58,39 +64,41 @@ func (p *proxy) connect() error {
 	return err
 }
 
-func (p *proxy) forwardFromAmplifier() {
+func (p *proxy) forwardFromAmplifier() error {
 	buf := make([]byte, 32)
 	for {
 		n, err := p.amp.Read(buf)
 		if err != nil {
-			if !strings.Contains(err.Error(), "use of closed network connection") {
-				slog.Error("Error reading from amplifier", slog.String("reason", err.Error()))
+			if strings.Contains(err.Error(), "use of closed network connection") {
+				return nil
 			}
-			return
+			slog.Error("Error reading from amplifier", slog.String("reason", err.Error()))
+			return err
 		}
 
 		err = p.ws.Write(p.ctx, websocket.MessageText, buf[:n])
 		if err != nil {
 			slog.Error("Error writing to socket", slog.String("reason", err.Error()))
-			return
+			return err
 		}
 	}
 }
 
-func (p *proxy) forwardFromClient() {
+func (p *proxy) forwardFromClient() error {
 	for {
 		_, data, err := p.ws.Read(p.ctx)
 		if err != nil {
-			if !isAcceptedError(err) {
-				slog.Error("Error reading from socket", slog.String("reason", err.Error()))
+			if isAcceptedError(err) {
+				return nil
 			}
-			return
+			slog.Error("Error reading from socket", slog.String("reason", err.Error()))
+			return err
 		}
 
 		_, err = p.amp.Write(data)
 		if err != nil {
 			slog.Error("Error writing to amplifier", slog.String("reason", err.Error()))
-			return
+			return err
 		}
 	}
 }

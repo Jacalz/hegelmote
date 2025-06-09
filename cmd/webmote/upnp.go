@@ -18,10 +18,17 @@ type upnpResponse struct {
 func upnpHandler(w http.ResponseWriter, r *http.Request) {
 	slog.Info("New UPNP lookup", slog.String("remote", r.RemoteAddr))
 
+	err := doUpnpLookup(w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func doUpnpLookup(w http.ResponseWriter, r *http.Request) error {
 	ws, err := websocket.Accept(w, r, nil)
 	if err != nil {
 		slog.Error("Failed to accept upnp socket:", slog.String("reason", err.Error()))
-		return
+		return err
 	}
 	defer ws.Close(websocket.StatusNormalClosure, "")
 
@@ -30,4 +37,5 @@ func upnpHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("Failed to write upnp devices:", slog.String("reason", err.Error()))
 	}
+	return err
 }

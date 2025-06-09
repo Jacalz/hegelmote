@@ -7,6 +7,7 @@ require (
 	github.com/alecthomas/assert/v2 v2.11.0
 	github.com/coder/websocket v1.8.13
 	github.com/supersonic-app/go-upnpcast v0.0.0-20250330154256-b957204209a5
+	golang.org/x/sync v0.13.0
 )
 
 require (
