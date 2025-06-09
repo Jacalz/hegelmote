@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"time"
 
@@ -52,8 +54,17 @@ func main() {
 
 	const timeout = time.Second
 	server := http.Server{Addr: ":" + port, ReadTimeout: timeout, WriteTimeout: timeout, ErrorLog: slog.NewLogLogger(logger, slog.LevelInfo)}
+
+	ctrlc := make(chan os.Signal, 1)
+	signal.Notify(ctrlc, os.Interrupt)
+
+	go func() {
+		<-ctrlc
+		server.Shutdown(context.Background())
+	}()
+
 	err = server.ListenAndServe()
-	if err != nil {
+	if err != nil && err != http.ErrServerClosed {
 		log.Fatalln("Error when running server:", err)
 	}
 }
