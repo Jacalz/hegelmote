@@ -60,7 +60,10 @@ func main() {
 
 	go func() {
 		<-ctrlc
-		server.Shutdown(context.Background())
+		err := server.Shutdown(context.Background())
+		if err != nil {
+			log.Fatalln("Error shutting down server:", err)
+		}
 	}()
 
 	err = server.ListenAndServe()
