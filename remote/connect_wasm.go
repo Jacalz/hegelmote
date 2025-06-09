@@ -40,5 +40,5 @@ func (w *wsWrapper) Write(p []byte) (int, error) {
 }
 
 func (w *wsWrapper) Close() error {
-	return w.ws.CloseNow()
+	return w.ws.Close(websocket.StatusNormalClosure, "")
 }

@@ -20,14 +20,14 @@ func upnpHandler(w http.ResponseWriter, r *http.Request) {
 
 	ws, err := websocket.Accept(w, r, nil)
 	if err != nil {
-		slog.Error("Failed to accept upnp socket:", slog.String("error", err.Error()))
+		slog.Error("Failed to accept upnp socket:", slog.String("reason", err.Error()))
 		return
 	}
-	defer ws.CloseNow()
+	defer ws.Close(websocket.StatusNormalClosure, "")
 
 	devices, err := upnp.LookUpDevices()
 	err = wsjson.Write(context.Background(), ws, upnpResponse{devices, err})
 	if err != nil {
-		slog.Error("Failed to write upnp devices:", slog.String("error", err.Error()))
+		slog.Error("Failed to write upnp devices:", slog.String("reason", err.Error()))
 	}
 }
