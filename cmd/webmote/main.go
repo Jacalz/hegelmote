@@ -42,7 +42,7 @@ func main() {
 	slog.SetDefault(slog.New(logger))
 
 	if !noWASM {
-		http.Handle("/", http.FileServer(http.Dir("./wasm")))
+		serveWASM()
 	}
 	http.Handle("/proxy", http.HandlerFunc(proxyHandler))
 	http.Handle("/upnp", http.HandlerFunc(upnpHandler))
