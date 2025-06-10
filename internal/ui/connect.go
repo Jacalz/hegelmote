@@ -188,18 +188,19 @@ func (m *mainUI) showConnectionDialog() {
 	go func() {
 		defer d.Hide()
 		devices, err := upnp.LookUpDevices()
-		if err != nil || len(devices) == 0 {
+		if err != nil {
 			fyne.LogError("Failed to search for devices", err)
+			devices = nil // Zero length so we show manual connection dialog.
+		}
+
+		switch len(devices) {
+		case 0:
 			m.showManualConnectionDialog()
-			return
-		}
-
-		if len(devices) > 1 {
+		case 1:
+			m.showConnectOneDialog(devices[0])
+		default:
 			m.showConnectMultipleDialog(devices)
-			return
 		}
-
-		m.showConnectOneDialog(devices[0])
 	}()
 }
 
