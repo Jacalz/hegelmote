@@ -4,13 +4,15 @@ package remote
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Jacalz/hegelmote/device"
+	"github.com/Jacalz/hegelmote/internal/upnp"
 	"github.com/coder/websocket"
 )
 
 func (c *Control) connect(host string, model device.Type) error {
-	ws, _, err := websocket.Dial(context.Background(), "ws://localhost:8086/proxy", nil)
+	ws, _, err := websocket.Dial(context.Background(), fmt.Sprintf("ws://%s/proxy", upnp.Proxy), nil)
 	if err != nil {
 		return err
 	}
