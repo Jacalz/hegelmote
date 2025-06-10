@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"net"
 	"net/http"
@@ -65,51 +66,44 @@ func (p *proxy) connect() error {
 }
 
 func (p *proxy) forwardFromAmplifier() error {
-	buf := make([]byte, 32)
+	buf := make([]byte, 8)
 	for {
 		n, err := p.amp.Read(buf)
 		if err != nil {
-			if strings.Contains(err.Error(), "use of closed network connection") {
-				return nil
-			}
-			slog.Error("Error reading from amplifier", slog.String("reason", err.Error()))
-			return err
+			return handleForwardingError("Error reading from amplifier", err)
 		}
 
 		err = p.ws.Write(p.ctx, websocket.MessageText, buf[:n])
 		if err != nil {
-			if isAcceptedError(err) {
-				return nil
-			}
-			slog.Error("Error writing to socket", slog.String("reason", err.Error()))
-			return err
+			return handleForwardingError("Error writing to socket", err)
 		}
 	}
 }
 
 func (p *proxy) forwardFromClient() error {
 	for {
-		_, data, err := p.ws.Read(p.ctx)
+		_, r, err := p.ws.Reader(p.ctx)
 		if err != nil {
-			if isAcceptedError(err) {
-				return nil
-			}
-			slog.Error("Error reading from socket", slog.String("reason", err.Error()))
-			return err
+			return handleForwardingError("Error getting reader from socket", err)
 		}
 
-		_, err = p.amp.Write(data)
+		_, err = io.Copy(p.amp, r)
 		if err != nil {
-			if strings.Contains(err.Error(), "use of closed network connection") {
-				return nil
-			}
-			slog.Error("Error writing to amplifier", slog.String("reason", err.Error()))
-			return err
+			return handleForwardingError("Error writing to amplifier", err)
 		}
 	}
 }
 
+func handleForwardingError(reason string, err error) error {
+	if isAcceptedError(err) {
+		return nil
+	}
+	slog.Error(reason, slog.String("reason", err.Error()))
+	return err
+}
+
 func isAcceptedError(err error) bool {
 	status := websocket.CloseStatus(err)
-	return status == websocket.StatusNormalClosure || status == websocket.StatusGoingAway
+	closedOK := status == websocket.StatusNormalClosure || status == websocket.StatusGoingAway
+	return closedOK || strings.Contains(err.Error(), "use of closed network connection")
 }
