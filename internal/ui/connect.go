@@ -184,6 +184,8 @@ func (m *mainUI) showConnectionDialog() {
 	d.SetOnClosed(activity.Stop)
 
 	go func() {
+		m.selectProxyServer()
+
 		devices, err := upnp.LookUpDevices()
 		if err != nil {
 			fyne.LogError("Failed to search for devices", err)
@@ -239,4 +241,17 @@ func (m *mainUI) onConnectionInfo() {
 
 	infoDialog = dialog.NewCustom("Connection info", "Dismiss", container.NewVBox(info, container.NewGridWithRows(1, disconnect, forget), prop), m.window)
 	infoDialog.Show()
+}
+
+func (m *mainUI) selectProxyServer() {
+	prefs := fyne.CurrentApp().Preferences()
+	if prefs.String("proxy") == "" {
+		wait := make(chan struct{})
+		proxy := &widget.Entry{PlaceHolder: "localhost:8086"}
+		done := &widget.Button{Text: "Confirm", Importance: widget.HighImportance, OnTapped: func() { close(wait) }}
+		dialog.ShowCustomWithoutButtons("Select a proxy server to use", container.NewVBox(proxy, &widget.Separator{}, container.NewHBox(done)), m.window)
+		<-wait
+		upnp.Proxy = proxy.Text
+		prefs.SetString("proxy", proxy.Text)
+	}
 }
