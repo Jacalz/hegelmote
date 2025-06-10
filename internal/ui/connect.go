@@ -180,19 +180,17 @@ func (m *mainUI) showConnectionDialog() {
 	prop.SetMinSize(fyne.NewSquareSize(75))
 
 	activity := widget.NewActivity()
-	activity.Start()
 	d := dialog.NewCustomWithoutButtons("Looking for amplifiers on LAN\u2026", container.NewStack(prop, activity), m.window)
 	d.SetOnClosed(activity.Stop)
-	d.Show()
 
 	go func() {
-		defer d.Hide()
 		devices, err := upnp.LookUpDevices()
 		if err != nil {
 			fyne.LogError("Failed to search for devices", err)
 			devices = nil // Zero length so we show manual connection dialog.
 		}
 
+		d.Hide()
 		switch len(devices) {
 		case 0:
 			m.showManualConnectionDialog()
@@ -202,6 +200,9 @@ func (m *mainUI) showConnectionDialog() {
 			m.showConnectMultipleDialog(devices)
 		}
 	}()
+
+	activity.Start()
+	d.Show()
 }
 
 func (m *mainUI) onConnectionInfo() {
