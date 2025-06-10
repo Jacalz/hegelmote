@@ -4,6 +4,7 @@ package main
 
 import (
 	"embed"
+	"io/fs"
 	"net/http"
 )
 
@@ -12,5 +13,6 @@ var wasm embed.FS
 
 // Serving WASM files embedded in the binary.
 func serveWASM() {
-	http.Handle("/", http.FileServer(http.FS(wasm)))
+	files, _ := fs.Sub(wasm, "wasm")
+	http.Handle("/", http.FileServer(http.FS(files)))
 }
