@@ -2,7 +2,7 @@ package device
 
 import "slices"
 
-var supportedDeviceNames = [...]string{"Röst", "H95", "H120", "H190", "H390", "H590"}
+var supportedDeviceNames = [...]string{"Röst", "H95", "H120", "H190", "H390", "H590", "H190V"}
 
 // Type specifies the Hegel amplifier device type to target.
 type Type int
@@ -14,6 +14,7 @@ const (
 	H190
 	H390
 	H590
+	H190V
 )
 
 // String returns the string name of the device.
