@@ -2,8 +2,6 @@ package device
 
 import "slices"
 
-var supportedDeviceNames = [...]string{"Röst", "H95", "H120", "H190", "H390", "H590", "H190V"}
-
 // Type specifies the Hegel amplifier device type to target.
 type Type int
 
@@ -37,11 +35,7 @@ func SupportedTypeNames() []string {
 }
 
 // FromString takes a model name as string and returns the corresponding [Type] ID for it.
-func FromString(device string) (Type, error) {
-	index := slices.Index(supportedDeviceNames[:], device)
-	if index == -1 {
-		return -1, errInvalidDevice
-	}
-
-	return Type(index), nil // #nosec
+// -1 is returned if the device is not supported.
+func FromString(device string) Type {
+	return Type(slices.Index(supportedDeviceNames[:], device)) // #nosec
 }

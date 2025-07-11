@@ -33,8 +33,8 @@ func LookUpDevices() ([]DiscoveredDevice, error) {
 			continue
 		}
 
-		model, err := device.FromString(found.ModelName)
-		if err != nil {
+		model := device.FromString(found.ModelName)
+		if model == -1 {
 			continue
 		}
 

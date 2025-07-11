@@ -96,7 +96,7 @@ func (m *mainUI) showManualConnectionDialog() {
 		Text:       "Connect",
 		Importance: widget.HighImportance,
 		OnTapped: func() {
-			model, _ := device.FromString(models.Selected)
+			model := device.Type(models.SelectedIndex()) // #nosec
 			err := m.handleConnection(hostname.Text, model, remember.Checked)
 			if err != nil {
 				dialog.ShowError(err, m.window)
