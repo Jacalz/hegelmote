@@ -25,6 +25,8 @@ func GetInputNames(device Type) ([]string, error) {
 		return InputsH120[:], nil
 	case H190:
 		return InputsH190[:], nil
+	case H190V:
+		return InputsH190V[:], nil
 	case H390:
 		return InputsH390[:], nil
 	case H590:
