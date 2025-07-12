@@ -65,6 +65,9 @@
   </branding>
 
   <releases>
+    <release version="0.10.1" date="2025-07-12" type="stable">
+      <url type="details">https://github.com/Jacalz/hegelmote/releases/tag/v0.10.1</url>
+    </release>
     <release version="0.10.0" date="2025-07-11" type="stable">
       <url type="details">https://github.com/Jacalz/hegelmote/releases/tag/v0.10.0</url>
     </release>
