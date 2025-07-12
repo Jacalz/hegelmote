@@ -23,8 +23,8 @@ This software has currently only been tested on `Hegel H95` but the list of supp
 - H95
 - H120
 - H190
+- H190V
 - H390
-- H390V
 - H590
 
 ## Installing
