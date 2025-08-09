@@ -61,7 +61,7 @@ func (p *proxy) connect() error {
 		return err
 	}
 
-	p.amp, err = net.Dial("tcp", string(host)+":50001")
+	p.amp, err = net.Dial("tcp", net.JoinHostPort(string(host), "50001"))
 	return err
 }
 

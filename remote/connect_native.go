@@ -15,7 +15,7 @@ func (c *Control) connect(host string, model device.Type) error {
 	defer cancel()
 
 	d := net.Dialer{}
-	conn, err := d.DialContext(ctx, "tcp", host+":50001")
+	conn, err := d.DialContext(ctx, "tcp", net.JoinHostPort(host, "50001"))
 	if err != nil {
 		return err
 	}
