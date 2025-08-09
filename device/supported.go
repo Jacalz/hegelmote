@@ -30,7 +30,7 @@ var (
 
 	InputsH190 = InputsH120
 
-	InputsH190V = []string{
+	InputsH190V = [...]string{
 		"XLR",
 		"Analog 1",
 		"Analog 2",
