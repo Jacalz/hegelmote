@@ -16,7 +16,7 @@ const resetInterval = 2 * time.Minute
 func NewControlWithListener(
 	onPower func(bool), onVolume func(Volume),
 	onMute func(bool), onInput func(device.Input),
-	OnReset func(), OnError func(error),
+	onReset func(), onError func(error),
 ) *ControlWithListener {
 	c := &ControlWithListener{
 		resetTicker:    time.NewTicker(resetInterval),
@@ -24,8 +24,8 @@ func NewControlWithListener(
 		OnVolumeChange: onVolume,
 		OnMuteChange:   onMute,
 		OnInputChange:  onInput,
-		OnReset:        OnReset,
-		OnError:        OnError,
+		OnReset:        onReset,
+		OnError:        onError,
 	}
 
 	c.resetTicker.Stop()

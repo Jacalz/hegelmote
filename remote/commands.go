@@ -109,7 +109,7 @@ func parseUint8FromBuf(buf []byte) (uint8, error) {
 	for i := 3; i < len(buf)-1 && buf[i] != '\r'; i++ {
 		char := buf[i]
 		if char < '0' || char > '9' {
-			return 0, fmt.Errorf("invalid uint8 value: %q", buf[:])
+			return 0, fmt.Errorf("invalid uint8 value: %q", buf)
 		}
 
 		number = number*10 + uint16(char-'0')
