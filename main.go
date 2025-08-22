@@ -9,9 +9,7 @@ import (
 
 func main() {
 	stop := profile.Start()
-	if stop != nil {
-		defer stop()
-	}
+	defer stop()
 
 	a := app.NewWithID("io.github.jacalz.hegelmote")
 	w := a.NewWindow("Hegelmote")

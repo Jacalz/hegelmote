@@ -18,9 +18,7 @@ import (
 
 func main() {
 	stop := profile.Start()
-	if stop != nil {
-		defer stop()
-	}
+	defer stop()
 
 	portNumber := uint64(8086)
 	flag.Uint64Var(&portNumber, "port", portNumber, "port to serve on")
