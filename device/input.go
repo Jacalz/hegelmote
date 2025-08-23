@@ -14,7 +14,7 @@ var (
 	errInvalidInput  = errors.New("unsupported input for device")
 )
 
-// GetInputs returns the list of input names for the given device.
+// GetInputNames returns the list of input names for the given device.
 func GetInputNames(device Type) ([]string, error) {
 	switch device {
 	case Röst:

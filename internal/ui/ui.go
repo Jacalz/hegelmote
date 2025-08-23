@@ -1,3 +1,4 @@
+// Package ui provides the user interface for the application.
 package ui
 
 import (

@@ -1,3 +1,4 @@
+// Package device provides device definitions for Hegel amplifiers.
 package device
 
 import "slices"

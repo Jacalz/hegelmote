@@ -1,3 +1,4 @@
+// Package upnp provides tooling to discover Hegel amplifiers on the network.
 package upnp
 
 import "github.com/Jacalz/hegelmote/device"

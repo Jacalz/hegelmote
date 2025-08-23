@@ -1,3 +1,4 @@
+// Package img provides image resources for uses in the application.
 package img
 
 import (

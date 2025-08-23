@@ -1,3 +1,4 @@
+// Package remote implements remote IP control of supported Hegel amplifiers.
 package remote
 
 import (
