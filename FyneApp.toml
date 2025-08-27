@@ -2,8 +2,8 @@
 Icon = "assets/img/icon-512.png"
 Name = "Hegelmote"
 ID = "io.github.jacalz.hegelmote"
-Version = "0.10.1"
-Build = 9
+Version = "0.11.0"
+Build = 10
 
 [LinuxAndBSD]
 GenericName = "Hegel Amplifier Remote"
