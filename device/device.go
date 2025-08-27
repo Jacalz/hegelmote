@@ -14,8 +14,6 @@ const (
 	H390
 	H590
 	H190V
-	H400
-	H600
 )
 
 // String returns the string name of the device.
