@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.11.0
+## v0.11.0
 - Fix the Makefile not applying the correct build tag in release mode.
 - Added support for using IPv6 addresses.
 - The input mappings for H190V now use an array like the other mappings (breaking change).
