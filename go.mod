@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	fyne.io/fyne/v2 v2.6.2-0.20250906082300-b2fbc56c9c52
 	github.com/alecthomas/assert/v2 v2.11.0
-	github.com/coder/websocket v1.8.13
+	github.com/coder/websocket v1.8.14
 	github.com/supersonic-app/go-upnpcast v0.0.0-20250610011303-aabd238ca576
 	golang.org/x/sync v0.16.0
 )
