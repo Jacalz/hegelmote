@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"net/netip"
+	"runtime"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -184,7 +185,9 @@ func (m *mainUI) showConnectionDialog() {
 	d.SetOnClosed(activity.Stop)
 
 	go func() {
-		m.selectProxyServer()
+		if runtime.GOOS == "js" {
+			m.selectProxyServer()
+		}
 
 		devices, err := upnp.LookUpDevices()
 		if err != nil {
@@ -245,13 +248,16 @@ func (m *mainUI) onConnectionInfo() {
 
 func (m *mainUI) selectProxyServer() {
 	prefs := fyne.CurrentApp().Preferences()
-	if prefs.String("proxy") == "" {
+	proxy := prefs.String("proxy")
+	if proxy == "" {
 		wait := make(chan struct{})
-		proxy := &widget.Entry{PlaceHolder: "localhost:8086"}
+		proxyEntry := &widget.Entry{PlaceHolder: "localhost:8086"}
 		done := &widget.Button{Text: "Confirm", Importance: widget.HighImportance, OnTapped: func() { close(wait) }}
-		dialog.ShowCustomWithoutButtons("Select a proxy server to use", container.NewVBox(proxy, &widget.Separator{}, container.NewHBox(done)), m.window)
+		dialog.ShowCustomWithoutButtons("Select a proxy server to use", container.NewVBox(proxyEntry, &widget.Separator{}, container.NewHBox(done)), m.window)
 		<-wait
-		upnp.Proxy = proxy.Text
-		prefs.SetString("proxy", proxy.Text)
+
+		proxy = proxyEntry.Text
+		prefs.SetString("proxy", proxy)
 	}
+	upnp.Proxy = proxy
 }
