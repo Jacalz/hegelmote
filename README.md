@@ -36,7 +36,7 @@ The recommended installation method for Linux is to use the Flatpak package from
 
 ## Experimental WASM build
 
-In the `cmd/webmote` folder, there is an experimental proxy server that runs locally with access to the amplifier and then allows the application to communicate to it over WebSockets when running sanboxed in the web browser. 
+In the `cmd/webmote` folder, there is an experimental proxy server that runs locally with access to the amplifier and then allows the application to communicate to it over WebSockets when running sanboxed in the web browser.
 
 ## Sources
 - **IP control command and Input table:** https://support.hegel.com/component/jdownloads/send/3-files/102-h95-h120-h190-h390-h590-ip-control-codes
