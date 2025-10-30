@@ -1,8 +1,6 @@
 package remote
 
-import (
-	"fmt"
-)
+import "fmt"
 
 // Volume specifies a volume in the range 0 to 100.
 type Volume = uint8
@@ -30,4 +28,20 @@ func (c *Control) VolumeDown() (Volume, error) {
 // GetVolume returns the currrently selected volume percentage.
 func (c *Control) GetVolume() (Volume, error) {
 	return c.sendWithNumericalResponse([]byte("-v.?\r"))
+}
+
+// SetVolumeMute allows turning on or off mute.
+func (c *Control) SetVolumeMute(mute bool) (bool, error) {
+	packet := createBooleanPacket('m', mute)
+	return c.sendWithBoolResponse(packet)
+}
+
+// ToggleVolumeMute toggles the muting of volume.
+func (c *Control) ToggleVolumeMute() (bool, error) {
+	return c.sendWithBoolResponse([]byte("-m.t\r"))
+}
+
+// GetVolumeMute returns true if the device is muted.
+func (c *Control) GetVolumeMute() (bool, error) {
+	return c.sendWithBoolResponse([]byte("-m.?\r"))
 }
