@@ -13,11 +13,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Jacalz/hegelmote/internal/profile"
+	"github.com/rymdport/easypgo"
 )
 
 func main() {
-	stop := profile.Start()
+	stop := easypgo.Generate()
 	defer stop()
 
 	portNumber := uint64(8086)
