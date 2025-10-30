@@ -2,6 +2,7 @@
 package remote
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -136,4 +137,19 @@ func createBooleanPacket(command byte, value bool) []byte {
 		packet[3] = '1'
 	}
 	return packet
+}
+
+// Mapping of error values. Index zero corresponds to error 1 and so on.
+// The following error codes were reverse engineered by sending incorrect commands.
+func errorFromCode(code byte) error {
+	switch code - '0' {
+	case 1:
+		return errors.New("malformed command")
+	case 2:
+		return errors.New("unknown command")
+	case 3:
+		return errors.New("invalid parameter")
+	default:
+		return fmt.Errorf("unexpected error code: %d", code)
+	}
 }

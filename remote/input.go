@@ -1,8 +1,12 @@
 package remote
 
 import (
+	"errors"
+
 	"github.com/Jacalz/hegelmote/device"
 )
+
+var errInputIsZero = errors.New("input cannot be zero")
 
 // SetInputFromName tells the amplifier to switch to the corresponding source name.
 // The input name should match one for the given device type.

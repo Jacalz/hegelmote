@@ -76,3 +76,27 @@ func TestParseUint8FromBuf(t *testing.T) {
 		assert.Equal(t, tc.error, err != nil)
 	}
 }
+
+func TestReturnedErrors(t *testing.T) {
+	control, mock := newControlMock()
+
+	mock.Fill("-e.1\r")
+
+	_, err := control.SetPower(true)
+	assert.Equal(t, errorFromCode('1'), err)
+
+	mock.Fill("-e.2\r")
+
+	_, err = control.SetPower(true)
+	assert.Equal(t, errorFromCode('2'), err)
+
+	mock.Fill("-e.3\r")
+
+	_, err = control.SetPower(true)
+	assert.Equal(t, errorFromCode('3'), err)
+
+	mock.Fill("-e.0\r")
+
+	_, err = control.SetPower(true)
+	assert.Error(t, err)
+}
