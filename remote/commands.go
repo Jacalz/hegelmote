@@ -64,7 +64,7 @@ func (c *Control) verifyResponse(buf [7]byte, n int) ([]byte, error) {
 	}
 
 	if buf[1] == 'e' {
-		return nil, errorFromCode(buf[3])
+		return nil, errorFromCode(buf[3]) // #nosec Gosec is stupid, see https://github.com/securego/gosec/issues/1406.
 	}
 
 	return buf[:n], nil
