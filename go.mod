@@ -3,7 +3,7 @@ module github.com/Jacalz/hegelmote
 go 1.24.0
 
 require (
-	fyne.io/fyne/v2 v2.7.0
+	fyne.io/fyne/v2 v2.7.1
 	github.com/alecthomas/assert/v2 v2.11.0
 	github.com/coder/websocket v1.8.14
 	github.com/rymdport/easypgo v0.2.1
