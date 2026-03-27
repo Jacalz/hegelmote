@@ -53,16 +53,14 @@ func main() {
 	const timeout = time.Second
 	server := http.Server{Addr: ":" + port, ReadTimeout: timeout, WriteTimeout: timeout, ErrorLog: slog.NewLogLogger(logger, slog.LevelInfo)}
 
-	ctrlc := make(chan os.Signal, 1)
-	signal.Notify(ctrlc, os.Interrupt)
-
-	go func() {
-		<-ctrlc
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+	context.AfterFunc(ctx, func() {
 		err := server.Shutdown(context.Background())
 		if err != nil {
 			log.Fatalln("Error shutting down server:", err)
 		}
-	}()
+	})
 
 	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
